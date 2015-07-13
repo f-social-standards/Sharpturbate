@@ -1,0 +1,14 @@
+﻿<Window x:Class="ChaturbateDownloader.Windows.ActiveStreams"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChaturbateDownloader.Windows"
+        mc:Ignorable="d"
+        Title="Active Streams" Height="300" Width="531" ResizeMode="CanMinimize">
+    <Grid Name="MainGrid">
+        <ScrollViewer HorizontalAlignment="Left" Height="259" VerticalAlignment="Top" Width="513">
+            <StackPanel Name="StatusStack" Height="Auto" Width="495"/>
+        </ScrollViewer>
+    </Grid>
+</Window>

@@ -1,0 +1,14 @@
+F:\Programming\Personal\ChaturbateDownloader\Chaturbate\bin\Debug\VideoConversion.dll
+F:\Programming\Personal\ChaturbateDownloader\Chaturbate\bin\Debug\VideoConversion.pdb
+F:\Programming\Personal\ChaturbateDownloader\Chaturbate\obj\Debug\Chaturbate.csprojResolveAssemblyReference.cache
+F:\Programming\Personal\ChaturbateDownloader\Chaturbate\bin\Debug\ChaturbateSharp.dll
+F:\Programming\Personal\ChaturbateDownloader\Chaturbate\bin\Debug\ChaturbateSharp.pdb
+F:\Programming\Personal\ChaturbateDownloader\Chaturbate\obj\Debug\ChaturbateSharp.dll
+F:\Programming\Personal\ChaturbateDownloader\Chaturbate\obj\Debug\ChaturbateSharp.pdb
+G:\BitBucket\ChaturbateDownloader\Chaturbate\bin\Debug\ChaturbateSharp.dll
+G:\BitBucket\ChaturbateDownloader\Chaturbate\bin\Debug\ChaturbateSharp.pdb
+G:\BitBucket\ChaturbateDownloader\Chaturbate\bin\Debug\VideoConversion.dll
+G:\BitBucket\ChaturbateDownloader\Chaturbate\bin\Debug\VideoConversion.pdb
+G:\BitBucket\ChaturbateDownloader\Chaturbate\obj\Debug\Chaturbate.csprojResolveAssemblyReference.cache
+G:\BitBucket\ChaturbateDownloader\Chaturbate\obj\Debug\ChaturbateSharp.dll
+G:\BitBucket\ChaturbateDownloader\Chaturbate\obj\Debug\ChaturbateSharp.pdb
