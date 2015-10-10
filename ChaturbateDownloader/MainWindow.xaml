@@ -1,31 +1,150 @@
-﻿<Window x:Class="ChaturbateDownloader.MainWindow"
+﻿<Controls:MetroWindow x:Class="ChaturbateDownloader.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChaturbateDownloader"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d"
-        Title="Chaturbate Downloader" Height="700" Width="1037" Closing="OnClose" ResizeMode="CanMinimize">
+        EnableDWMDropShadow="True"
+        WindowTransitionsEnabled="True"
+        WindowStartupLocation="CenterScreen"
+        Title="Chaturbate Downloader" Height="670" Width="1024" MinHeight="670" MinWidth="1024" Closing="OnClose" ResizeMode="CanResize" SizeChanged="RearrangeGridOnSizeChange">
     <Window.Resources>
-        <ImageBrush x:Key="LogoMask" ImageSource="Images/chaturbate.png"/>
+        <ResourceDictionary>
+            <ImageBrush x:Key="LogoMask" ImageSource="Images/chaturbate.png"/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
+
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Button x:Name="scheduleDownload" Click="ScheduleDownload">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_clock}"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock Margin="4 0 0 0"
+                   VerticalAlignment="Center"
+                   Text="Schedule"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="viewLinkBox" Click="ViewLinkBox">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_text_align_center}"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock Margin="4 0 0 0"
+                   VerticalAlignment="Center"
+                   Text="Link box"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="viewStreamButton" Click="ViewStreams">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_image_redeye}"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock Margin="4 0 0 0"
+                   VerticalAlignment="Center"
+                   Text="stream status" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="defaultDownloadButton" Click="SetDefaultDownloadLocation">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_settings}"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock Margin="4 0 0 0"
+                   VerticalAlignment="Center"
+                   Text="set download location" />
+                </StackPanel>
+            </Button>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
+
+    <Controls:MetroWindow.Flyouts>
+        <Controls:FlyoutsControl>
+            <Controls:Flyout x:Name="ScheduleFlyout" ClosingFinished="CloseFlyout"  Position="left" Width="400" Height="Auto" Theme="Adapt">
+                <StackPanel>
+                    <StackPanel Margin="0,20,0,0" Height="Auto" HorizontalAlignment="Left" Width="385">
+                        <TextBox x:Name="streamLink"></TextBox>
+                        <Button x:Name="scheduleButton" Click="InitiateScheduler" Style="{DynamicResource AccentedSquareButtonStyle}">Schedule</Button>
+                    </StackPanel>
+                    <ScrollViewer x:Name="scheduleScroll">
+                        <StackPanel Margin="0,20,0,0" x:Name="favoriteModelButtons" Height="Auto">
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </StackPanel>
+            </Controls:Flyout>
+            <Controls:Flyout x:Name="ActivityFlyout" Position="Left" Width="400" Theme="Adapt" ClosingFinished="CloseFlyout">
+                <StackPanel x:Name="FlyoutContent">
+
+                </StackPanel>
+            </Controls:Flyout>
+            <Controls:Flyout x:Name="StreamFlyout" Position="Bottom" Width="400" Theme="Adapt">
+                <StackPanel>
+                    <TextBox Visibility="Visible" AcceptsReturn="True" x:Name="LinkBox" Height="200" Background="#EFEFEF" Width="320" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Auto" FontSize="10" />
+                </StackPanel>
+            </Controls:Flyout>
+        </Controls:FlyoutsControl>
+    </Controls:MetroWindow.Flyouts>
+
     <Grid Margin="0,0,2,0">
-        <TextBox AcceptsReturn="True" x:Name="LinkBox" Height="94" Margin="10,0,10,35" TextWrapping="Wrap" VerticalAlignment="Bottom" ScrollViewer.VerticalScrollBarVisibility="Auto" FontSize="9.333" />
-        <Button x:Name="DownloadButton" Content="Download" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="237" Click="OnDownload"/>
-        <Button x:Name="ChaturbateButton" Content="" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Width="109" Height="40" BorderBrush="{x:Null}" Background="{DynamicResource LogoMask}" OpacityMask="{DynamicResource LogoMask}" Click="Featured"/>
-        <Button x:Name="button" Content="Active Streams" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="230" Click="ViewStreams"/>
-        <TextBlock x:Name="ActiveStreamLabel" HorizontalAlignment="Right" Margin="0,23,10,0" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Width="200"/>
-        <ScrollViewer Margin="10,50,10,134">
-            <Grid x:Name="StreamContainer" HorizontalAlignment="Left" Height="Auto" VerticalAlignment="Top" Width="999">
+        <Button x:Name="RefreshButton" HorizontalAlignment="Right" Margin="0,19,70,0" VerticalAlignment="Top" Width="50" Height="50" Click="PopulateGrid"  Style="{DynamicResource MetroCircleButtonStyle}">
+            <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_refresh}"/>
+                </Rectangle.OpacityMask>
+            </Rectangle>
+        </Button>
+        <Button x:Name="DownloadButton" HorizontalAlignment="Right" Margin="0,19,10,0" VerticalAlignment="Top" Width="50" Height="50" Click="OnDownload"  Style="{DynamicResource MetroCircleButtonStyle}">
+            <Rectangle Width="20" Height="20"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_download}"/>
+                </Rectangle.OpacityMask>
+            </Rectangle>
+        </Button>
+        <Button x:Name="ChaturbateButton" ToolTip="Main" Content="" HorizontalAlignment="Left" Margin="10,25,0,0" VerticalAlignment="Top" Width="109" Height="40" BorderBrush="{x:Null}" Background="{DynamicResource LogoMask}" OpacityMask="{DynamicResource LogoMask}" Click="CategorySelect"/>
+        <TextBlock x:Name="ActiveStreamLabel" Text="Active streams: 0" HorizontalAlignment="Right" Margin="0,44,131,0" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Width="110"/>
+        <Controls:ProgressRing x:Name="LoadingGrid" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource AccentColorBrush}"/>
+        <ScrollViewer Margin="10,67,10,10">
+            <Grid x:Name="StreamContainer" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="160"></ColumnDefinition>
-                    <ColumnDefinition Width="160"></ColumnDefinition>
-                    <ColumnDefinition Width="160"></ColumnDefinition>
-                    <ColumnDefinition Width="160"></ColumnDefinition>
-                    <ColumnDefinition Width="160"></ColumnDefinition>
-                    <ColumnDefinition Width="160"></ColumnDefinition>
+                    <ColumnDefinition Width="200"></ColumnDefinition>
+                    <ColumnDefinition Width="200"></ColumnDefinition>
+                    <ColumnDefinition Width="200"></ColumnDefinition>
+                    <ColumnDefinition Width="200"></ColumnDefinition>
+                    <ColumnDefinition Width="200"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -45,11 +164,12 @@
                 </Grid.RowDefinitions>
             </Grid>
         </ScrollViewer>
-        <TextBlock x:Name="femaleCams" HorizontalAlignment="Left" Margin="124,23,0,0" TextWrapping="Wrap" Text="Female" VerticalAlignment="Top"/>
-        <TextBlock x:Name="coupleCams" HorizontalAlignment="Left" Margin="220,23,0,0" TextWrapping="Wrap" Text="Couple" VerticalAlignment="Top"/>
-        <TextBlock x:Name="transsexualCams" HorizontalAlignment="Left" Margin="274,23,0,0" TextWrapping="Wrap" Text="Transsexual" VerticalAlignment="Top"/>
-        <TextBlock x:Name="maleCams" HorizontalAlignment="Left" Margin="179,23,0,0" TextWrapping="Wrap" Text="Male" VerticalAlignment="Top"/>
+        <TextBlock x:Name="femaleCams" MouseEnter="CategoryHover" MouseDown="CategorySelect" MouseLeave="CategoryHover" HorizontalAlignment="Left" Margin="124,43,0,0" TextWrapping="Wrap" Text="Female" ToolTip="Female" VerticalAlignment="Top"/>
+        <TextBlock x:Name="coupleCams" MouseEnter="CategoryHover" MouseDown="CategorySelect" MouseLeave="CategoryHover" HorizontalAlignment="Left" Margin="220,43,0,0" TextWrapping="Wrap" Text="Couple" ToolTip="Couple"  VerticalAlignment="Top"/>
+        <TextBlock x:Name="transsexualCams" MouseEnter="CategoryHover" MouseDown="CategorySelect" MouseLeave="CategoryHover" HorizontalAlignment="Left" Margin="270,43,0,0" TextWrapping="Wrap" Text="Transsexual" ToolTip="Transsexual" VerticalAlignment="Top"/>
+        <TextBlock x:Name="maleCams" MouseDown="CategorySelect" MouseEnter="CategoryHover" MouseLeave="CategoryHover" HorizontalAlignment="Left" Margin="179,43,0,0" TextWrapping="Wrap" Text="Male" ToolTip="Male" VerticalAlignment="Top"/>
         <TextBlock x:Name="disclaimer" HorizontalAlignment="Right" Margin="0,5,10,0" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Width="506" Text="This application is not intended to be used on streams with DCMA disclaimers!" FontSize="9.333"/>
-        <TextBlock x:Name="favoriteCams" HorizontalAlignment="Left" Margin="345,23,0,0" TextWrapping="Wrap" Text="Favorites" VerticalAlignment="Top"/>
+        <TextBlock x:Name="favoriteCams" MouseDown="CategorySelect" MouseEnter="CategoryHover" MouseLeave="CategoryHover" HorizontalAlignment="Left" Margin="345,43,0,0" TextWrapping="Wrap" Text="Favorites" ToolTip="Favorites" VerticalAlignment="Top"/>
+        <TextBlock x:Name="ActiveScheduleLabel" Text="Active schedules: 0" HorizontalAlignment="Right" Margin="0,44,246,0" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Width="138"/>
     </Grid>
-</Window>
+</Controls:MetroWindow>

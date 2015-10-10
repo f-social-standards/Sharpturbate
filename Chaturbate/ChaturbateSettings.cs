@@ -9,5 +9,6 @@ namespace ChaturbateSharp
     public class ChaturbateSettings
     {
         public List<ChaturbateModel> Models = new List<ChaturbateModel>();
+        public string DefaultPath = string.Empty;
     }
 }

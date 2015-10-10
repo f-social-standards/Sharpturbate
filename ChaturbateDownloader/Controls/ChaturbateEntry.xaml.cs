@@ -35,17 +35,17 @@ namespace ChaturbateDownloader.Controls
             if (download.IsActive)
             {
                 StatusLed.ToolTip = "Downloading...";
-                StatusLed.Fill = Brushes.LawnGreen;
+                StatusLed.Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom("#16a085"));
             }
             else
             {
                 StatusLed.ToolTip = "Stream inactive...";
-                StatusLed.Fill = Brushes.OrangeRed;
+                StatusLed.Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom("#c0392b"));
             }
 
             if (download.IsJoiningParts)
             {
-                StatusLed.Fill = Brushes.YellowGreen;
+                StatusLed.Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom("#2c3e50"));
                 StatusLed.ToolTip = "Joining files...";
             }
             

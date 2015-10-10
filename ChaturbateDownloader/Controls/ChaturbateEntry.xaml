@@ -4,12 +4,43 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ChaturbateDownloader.Controls"
-             mc:Ignorable="d" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Width="468" Height="39">
+             mc:Ignorable="d" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Width="400" Height="40">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid Margin="0,0,10,0" Width="auto">
-        <TextBlock x:Name="chaturbateStar" HorizontalAlignment="Left" Margin="10,10,0,10" TextWrapping="Wrap" VerticalAlignment="Stretch" RenderTransformOrigin="0.5,0.5" Width="141"/>
-        <Button x:Name="logButton" Content="Log" HorizontalAlignment="Right" Margin="312,10,0,0" VerticalAlignment="Top" Width="75"/>
-        <Button x:Name="removeButton" Content="Remove" HorizontalAlignment="Right" Margin="0,10,80,0" VerticalAlignment="Top" Width="75"/>
-        <Ellipse Name="StatusLed" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="10" Margin="156,15,0,0" Stroke="Black" VerticalAlignment="Top" Width="10"/>
-        <Button x:Name="stopAndJoinButton" Content="Stop &amp; Join" HorizontalAlignment="Right" Margin="0,10,160,0" VerticalAlignment="Top" Width="75" Click="StopAndJoin"/>
+        <TextBlock x:Name="chaturbateStar" HorizontalAlignment="Left" Margin="10,10,0,10" TextWrapping="Wrap" VerticalAlignment="Stretch" RenderTransformOrigin="0.5,0.5" Width="185"/>
+        <Ellipse Name="StatusLed" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="30" Margin="200,5,0,0" Stroke="WhiteSmoke" VerticalAlignment="Top" Width="30"/>
+        <Button ToolTip="Activity log" x:Name="logButton" HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="40" Style="{DynamicResource MetroCircleButtonStyle}">
+            <Rectangle Width="16" Height="18"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_journal}"/>
+                </Rectangle.OpacityMask>
+            </Rectangle>
+        </Button>
+        <Button ToolTip="Stop and remove temporary data" x:Name="removeButton" HorizontalAlignment="Right" Margin="0,0,45,0" VerticalAlignment="Top" Width="40" Height="40" Style="{DynamicResource MetroCircleButtonStyle}" >
+            <Rectangle Width="16" Height="18"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_delete}"/>
+                </Rectangle.OpacityMask>
+            </Rectangle>
+        </Button>
+        <Button x:Name="stopAndJoinButton" ToolTip="Stop streaming and join video parts" HorizontalAlignment="Right" Margin="0,0,90,0" VerticalAlignment="Top" Width="40" Height="40" Click="StopAndJoin" Style="{DynamicResource MetroCircleButtonStyle}">
+            <Rectangle Width="16" Height="16"
+                   Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Stretch="Fill"
+                         Visual="{DynamicResource appbar_control_stop}"/>
+                </Rectangle.OpacityMask>
+            </Rectangle>
+        </Button>
     </Grid>
 </UserControl>

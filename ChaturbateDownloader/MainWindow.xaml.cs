@@ -1,11 +1,15 @@
-﻿using ChaturbateDownloader.Helpers;
-using ChaturbateDownloader.Windows;
+﻿using ChaturbateDownloader.Controls;
+using ChaturbateDownloader.Helpers;
 using ChaturbateSharp;
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,195 +22,108 @@ namespace ChaturbateDownloader
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
-        public static List<Chaturbate> downloads;
+        public volatile static List<Chaturbate> downloads = new List<Chaturbate>();
+        volatile int scheduleCount = 0;
+
         Rooms type = Rooms.Main;
         System.Windows.Forms.NotifyIcon notificationIcon;
         ChaturbateSettings settings;
+        double lastWindowsWidth = 0;
 
         public void UpdateStreamCount()
         {
             ActiveStreamLabel.Text = string.Format("Active streams: {0}", downloads.Count);
+            ActiveScheduleLabel.Text = string.Format("Active schedules: {0}", scheduleCount);
         }
 
         public MainWindow()
         {
             InitializeComponent();
-            downloads = new List<Chaturbate>();
+
+            lastWindowsWidth = this.Width;
+
             settings = JsonSettings<ChaturbateSettings>.Get();
-            PopulateGrid();
-
-            femaleCams.MouseEnter += CategoryHover;
-            coupleCams.MouseEnter += CategoryHover;
-            transsexualCams.MouseEnter += CategoryHover;
-            maleCams.MouseEnter += CategoryHover;
-            favoriteCams.MouseEnter += CategoryHover;
-
-            femaleCams.MouseLeave += CategoryExitHover;
-            coupleCams.MouseLeave += CategoryExitHover;
-            transsexualCams.MouseLeave += CategoryExitHover;
-            maleCams.MouseLeave += CategoryExitHover;
-            favoriteCams.MouseLeave += CategoryExitHover;
-
-            femaleCams.MouseDown += CategorySelect;
-            coupleCams.MouseDown += CategorySelect;
-            transsexualCams.MouseDown += CategorySelect;
-            maleCams.MouseDown += CategorySelect;
-            favoriteCams.MouseDown += CategorySelect;
 
             notificationIcon = new System.Windows.Forms.NotifyIcon();
             notificationIcon.Icon = Properties.Resources.main;
             notificationIcon.Visible = false;
+
             Icon = Imaging.CreateBitmapSourceFromHBitmap(Properties.Resources.main.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
             notificationIcon.DoubleClick +=
                 delegate (object sender, EventArgs args)
                 {
                     this.Show();
                     this.WindowState = WindowState.Normal;
                 };
-        }
 
-        private void CategoryHover(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            ((TextBlock)sender).FontWeight = FontWeights.Bold;
-        }
-
-        private void CategoryExitHover(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            ((TextBlock)sender).FontWeight = FontWeights.Normal;
-        }
-
-        private void CategorySelect(object sender, MouseButtonEventArgs e)
-        {
-            type = (Rooms)Enum.Parse(typeof(Rooms), ((TextBlock)sender).Text);
             PopulateGrid();
         }
 
-        public async void PopulateGrid()
+        private void CloseFlyout(object sender, RoutedEventArgs e)
+        {
+            FlyoutContent.Children.Clear();
+        }
+
+        #region Categories
+        private void CategoryHover(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            var textBlock = ((TextBlock)sender);
+            if (textBlock.FontWeight == FontWeights.Normal)
+                textBlock.FontWeight = FontWeights.Bold;
+            else
+                textBlock.FontWeight = FontWeights.Normal;
+        }
+
+        private void CategorySelect(object sender, RoutedEventArgs e)
+        {
+            string roomType = string.Empty;
+            if (sender.GetType() == typeof(TextBlock))
+            {
+                var text = (TextBlock)sender;
+                roomType = text.ToolTip.ToString();
+            }
+            if (sender.GetType() == typeof(Button))
+            {
+                var button = (Button)sender;
+                roomType = button.ToolTip.ToString();
+            }
+            type = (Rooms)Enum.Parse(typeof(Rooms), roomType);
+            PopulateGrid();
+        }
+        #endregion
+
+        public async void PopulateGrid(object sender = null, RoutedEventArgs e = null)
         {
             StreamContainer.Children.Clear();
-
+            LoadingGrid.IsActive = true;
             try
             {
                 var streams = type == Rooms.Favorites ? await ChaturbateStreams.GetFavoriteStreams(settings) : await ChaturbateStreams.GetStreams(type);
                 int column = 0, row = 0;
-
                 foreach (var stream in streams)
                 {
-                    var image = new Image();
-                    BitmapImage bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(stream.Image, UriKind.Absolute);
-                    bitmap.EndInit();
-
-                    image.Source = bitmap;
-                    image.Width = 120;
-                    image.Margin = new Thickness(0, 15, 0, 5);
-
-                    image.MouseDown += (object sender, MouseButtonEventArgs e) =>
-                    {
-                        var selectedImage = ((Image)sender);
-                        if (selectedImage.Opacity > 0.3)
-                        {
-                            selectedImage.Opacity = 0.3;
-                            LinkBox.AppendText(stream.Link + Environment.NewLine);
-                        }
-                        else
-                        {
-                            if (LinkBox.Text.Contains(stream.Link))
-                            {
-                                LinkBox.Text = LinkBox.Text.Replace(stream.Link + Environment.NewLine, "");
-                                selectedImage.Opacity = 0.6;
-                            }
-                            else MessageBox.Show("This stream is already in the download queue...");
-                        }
-                    };
-
-                    image.MouseEnter += (object sender, MouseEventArgs e) =>
-                    {
-                        var hoveredImage = ((Image)sender);
-                        if (hoveredImage.Opacity == 1)
-                            hoveredImage.Opacity = 0.6;
-                    };
-
-                    image.MouseLeave += (object sender, MouseEventArgs e) =>
-                    {
-                        var hoveredImage = ((Image)sender);
-                        if (hoveredImage.Opacity == 0.6)
-                            hoveredImage.Opacity = 1;
-                    };
+                    ChaturbateModelContainer chaturbateModel = new ChaturbateModelContainer(stream);
 
                     if (downloads.FirstOrDefault(x => x.SiteLink == stream.Link) != null)
-                    {
-                        image.Opacity = 0.3;
-                    }
-
-                    var text = new TextBlock();
-                    text.Text = stream.StreamName;
-                    text.FontWeight = FontWeights.Bold;
-                    text.Foreground = Brushes.Black;
-                    text.Margin = new Thickness(20, 0, 0, 0);
-
-                    var favorite = new Image();
-                    BitmapImage favBitmap = new BitmapImage();
-                    favBitmap.BeginInit();
-                    favBitmap.StreamSource = GetStream(ImageFormat.Png);
-                    favBitmap.EndInit();
-
-                    favorite.Source = favBitmap;
-                    favorite.Width = 15;
-                    favorite.Height = 15;
-                    favorite.Margin = new Thickness(140, -70, 0, 0);
-                    favorite.Opacity = 0.3;
+                        chaturbateModel.IsModelSelected = true;
 
                     if (settings.Models.FirstOrDefault(x => x.StreamName == stream.StreamName) != null)
-                        favorite.Opacity = 1;
+                        chaturbateModel.IsFavorite = true;
+                    Grid.SetRow(chaturbateModel, row);
+                    Grid.SetColumn(chaturbateModel, column++);
 
-                    favorite.MouseEnter += (object sender, MouseEventArgs e) => {
-                        if (((Image)sender).Opacity == 0.3)
-                        {
-                            ((Image)sender).Opacity = 0.9;
-                        }
-                    };
+                    chaturbateModel.MarkAsFavorite += AddFavorite;
 
-                    favorite.MouseLeave += (object sender, MouseEventArgs e) => {
-                        if (((Image)sender).Opacity == 0.9)
-                        {
-                            ((Image)sender).Opacity = 0.3;
-                        }
-                    };
+                    chaturbateModel.PlayStream += PlayStream;
 
-                    favorite.MouseDown += (object sender, MouseButtonEventArgs e) => {
-                        if (((Image)sender).Opacity != 1)
-                        {
-                            ((Image)sender).Opacity = 1;
-                            settings.Models.Add(stream);
-                            JsonSettings<ChaturbateSettings>.Set(settings);
-                        }
-                        else
-                        {
-                            var item = settings.Models.FirstOrDefault(x => x.StreamName == stream.StreamName);
-                            if(item != null)
-                            {
-                                settings.Models.Remove(item);
-                                ((Image)sender).Opacity = 0.3;
-                                JsonSettings<ChaturbateSettings>.Set(settings);
-                            }
-                        }
-                    };
+                    chaturbateModel.ModelClick += ModelSelect;
 
-                    Canvas.SetZIndex(favorite, 1000);
-                    StreamContainer.Children.Add(text);
-                    StreamContainer.Children.Add(favorite);
-                    StreamContainer.Children.Add(image);
+                    LoadingGrid.IsActive = false;
+                    StreamContainer.Children.Add(chaturbateModel);
 
-                    Grid.SetRow(favorite, row);
-                    Grid.SetColumn(favorite, column);
-                    Grid.SetRow(image, row);
-                    Grid.SetColumn(image, column);
-                    Grid.SetRow(text, row);
-                    Grid.SetColumn(text, column++);
                     if (column == StreamContainer.ColumnDefinitions.Count)
                     {
                         column = 0;
@@ -216,34 +133,79 @@ namespace ChaturbateDownloader
             }
             catch (Exception)
             {
-                MessageBox.Show("No internet connection available. Cannot fetch data from Chaturbate!");
+                await this.ShowMessageAsync("Error notification", "Cannot fetch data from Chaturbate!");
             }
         }
 
-        public Stream GetStream(ImageFormat format)
+        private void AddFavorite(object sender, MouseButtonEventArgs e)
         {
-            var ms = new MemoryStream();
-            Properties.Resources.fav.Save(ms, format);
-            return ms;
+            var chaturbateModel = (ChaturbateModelContainer)sender;
+            if (chaturbateModel.IsFavorite)
+            {
+                settings.Models.Add(chaturbateModel.Model);
+                JsonSettings<ChaturbateSettings>.Set(settings);
+            }
+            else
+            {
+                var item = settings.Models.FirstOrDefault(x => x.StreamName == chaturbateModel.Model.StreamName);
+                if (item != null)
+                {
+                    settings.Models.Remove(item);
+                    JsonSettings<ChaturbateSettings>.Set(settings);
+                }
+            }
         }
 
-        private void EliminateVideo(string msg, string link)
+        private async void PlayStream(object sender, MouseButtonEventArgs e)
         {
-            MessageBox.Show(msg);
+            var chaturbateModel = (ChaturbateModelContainer)sender;
+            chaturbateModel.IsStreamLoading = true;
+            
+            if (!string.IsNullOrWhiteSpace(chaturbateModel.StreamLink))
+            {
+                var videoStream = new ChaturbateStreamContainer(chaturbateModel.StreamLink);
+                FlyoutContent.Children.Clear();
+                ActivityFlyout.Header = string.Format("Streaming {0}", chaturbateModel.Model.StreamName);
+                FlyoutContent.Children.Add(videoStream);
+                chaturbateModel.IsStreamLoading = false;
+                ActivityFlyout.IsOpen = true;
+            }
+            else await this.ShowMessageAsync("Stream notification", "An error occured while fetching the stream URL.");
+        }
+
+        private async void ModelSelect(object sender, MouseButtonEventArgs e)
+        {
+            var chaturbateModel = (ChaturbateModelContainer)sender;
+            if (chaturbateModel.IsModelSelected)
+            {
+                LinkBox.AppendText(chaturbateModel.Model.Link + Environment.NewLine);
+            }
+            else
+            {
+                if (LinkBox.Text.Contains(chaturbateModel.Model.Link))
+                {
+                    LinkBox.Text = LinkBox.Text.Replace(chaturbateModel.Model.Link + Environment.NewLine, "");
+                }
+                else await this.ShowMessageAsync("Action notification", "This stream is already in the download queue...");
+            }
+        }
+
+        private async void EliminateVideo(string msg, string link)
+        {
             var video = downloads.FirstOrDefault(x => x.SiteLink == link);
             downloads.Remove(video);
             UpdateStreamCount();
-            PopulateGrid();
+            await this.ShowMessageAsync("Download notification", msg);
         }
 
         private void OnDownload(object sender, RoutedEventArgs e)
         {
             var saveFileDialog = new System.Windows.Forms.FolderBrowserDialog();
 
-            if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) 
+            if (!string.IsNullOrWhiteSpace(settings.DefaultPath) || saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) 
             {
                 var links = LinkBox.Text.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                string downloadPath = saveFileDialog.SelectedPath;
+                string downloadPath = string.IsNullOrWhiteSpace(settings.DefaultPath) ? saveFileDialog.SelectedPath : settings.DefaultPath;
                 foreach (string link in links)
                 {
                     downloads.Add(new Chaturbate(link));
@@ -260,26 +222,32 @@ namespace ChaturbateDownloader
             }
 
             LinkBox.Text = string.Empty;
-
-            PopulateGrid();
-        }
-
-        private void Featured(object sender, RoutedEventArgs e)
-        {
-            type = Rooms.Main;
-            PopulateGrid();
         }
 
         private void ViewStreams(object sender, RoutedEventArgs e)
         {
-            var activityWindow = new ActiveStreams();
-            activityWindow.Show();
-            activityWindow.OnRemove += (Chaturbate stream) => {
-                Dispatcher.Invoke(() => {
-                    if(!stream.IsJoiningParts && !stream.IsActive && !stream.IsTimedOut)
-                        EliminateVideo(string.Format("Succesfully removed and deleted files for {0}...", stream.ClipName), stream.SiteLink);
-                });
-            };
+            if (!ActivityFlyout.IsOpen)
+            {
+                ActivityFlyout.IsOpen = true;
+                FlyoutContent.Children.Clear();
+                ActivityFlyout.Header = "Stream activity";
+                foreach (var download in downloads.OrderBy(x => x.ClipName))
+                {
+                    var entry = new ChaturbateEntry(download);
+
+                    entry.OnRemove += async (Chaturbate removedDownload, ChaturbateEntry element) =>
+                    {
+                        downloads.Remove(removedDownload);
+                        if (FlyoutContent.Children.Contains(element))
+                            FlyoutContent.Children.Remove(element);
+                        PopulateGrid();
+                        await this.ShowMessageAsync("Download notification", string.Format("Succesfully removed {0}", removedDownload.ClipName));
+                    };
+
+                    FlyoutContent.Children.Add(entry);
+                }
+            }
+            else ActivityFlyout.IsOpen = false;
         }
 
         private void OnClose(object sender, System.ComponentModel.CancelEventArgs e)
@@ -287,22 +255,164 @@ namespace ChaturbateDownloader
             foreach (var download in downloads)
             {
                 if (download.IsActive)
-                    download.RemoveDownload();
+                    download.StopDownload();
             }
-
+                       
             notificationIcon.Visible = false;
         }
 
         protected override void OnStateChanged(EventArgs e)
         {
-            if (WindowState == System.Windows.WindowState.Minimized)
+            if (WindowState == WindowState.Minimized)
             {
                 this.Hide();
                 notificationIcon.Visible = true;
             }
             else notificationIcon.Visible = false;
 
+            if (WindowState == WindowState.Maximized)
+            {
+                Task.Run(() =>
+                {
+                    Thread.Sleep(150);
+                    Dispatcher.Invoke(() =>
+                    {
+                        RearrangeGridOnSizeChange(null, null);
+                    });
+                });
+            }
+
             base.OnStateChanged(e);
+        }
+
+        private async void SetDefaultDownloadLocation(object sender, RoutedEventArgs e)
+        {
+            string downloadLocation = "";
+
+            var respone = await this.ShowMessageAsync("Default download location", "Set default download location manually?", MessageDialogStyle.AffirmativeAndNegative);
+            
+            if(respone == MessageDialogResult.Affirmative)
+            {
+                downloadLocation = await this.ShowInputAsync("Default download location", "Please input the default");
+            }
+            else
+            {
+                var saveFileDialog = new System.Windows.Forms.FolderBrowserDialog();
+                if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    downloadLocation = saveFileDialog.SelectedPath;                    
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(downloadLocation))
+            {
+                settings.DefaultPath = downloadLocation;
+                JsonSettings<ChaturbateSettings>.Set(settings);
+            }
+        }
+
+        private void RearrangeGridOnSizeChange(object sender, SizeChangedEventArgs e)
+        {
+            scheduleScroll.Height = this.ActualHeight - 50;
+            var difference = Math.Abs(lastWindowsWidth - this.ActualWidth);
+            if (difference > 180)
+            {
+                int column = 0, row = 0;
+                int columns = (int)this.ActualWidth / 200;
+                StreamContainer.ColumnDefinitions.Clear();
+                for (int i = 0; i < columns; i++)
+                {
+                    StreamContainer.ColumnDefinitions.Add(new ColumnDefinition()
+                    {
+                        Width = new GridLength(200)
+                    });
+                }
+
+                foreach (var model in StreamContainer.Children)
+                {
+                    var chaturbateModel = (ChaturbateModelContainer)model;
+                    Grid.SetRow(chaturbateModel, row);
+                    Grid.SetColumn(chaturbateModel, column++);
+
+                    if (column == StreamContainer.ColumnDefinitions.Count)
+                    {
+                        column = 0;
+                        row++;
+                    }
+                }
+
+                lastWindowsWidth = this.ActualWidth;
+            }
+        }
+
+        private void ViewLinkBox(object sender, RoutedEventArgs e)
+        {
+            StreamFlyout.IsOpen = !StreamFlyout.IsOpen;
+        }
+
+        private void ScheduleDownload(object sender, RoutedEventArgs e)
+        {
+            favoriteModelButtons.Children.Clear();
+            var inactiveFavorites = settings.Models
+                .Where(x => downloads.Where(d => d.ClipName == x.StreamName)
+                .FirstOrDefault() == null)
+                .OrderBy(x => x.StreamName);
+            foreach (var model in inactiveFavorites)
+            {
+                var btn = new Button();
+                btn.Content = model.StreamName;
+                btn.Click += (object senderx, RoutedEventArgs ex) => {
+                    streamLink.Text = model.Link;
+                };
+                favoriteModelButtons.Children.Add(btn);
+            }
+            ScheduleFlyout.IsOpen = true;
+        }
+
+        private async void InitiateScheduler(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(settings.DefaultPath))
+                await this.ShowMessageAsync("Settings error", "Please choose a download default location before scheduling a download.");
+            else
+            {
+                string link = streamLink.Text;
+                string downloadPath = settings.DefaultPath;
+                var schedule = new Task(() =>
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            Chaturbate.GetChaturbateStreamLink(link);
+                            Dispatcher.Invoke(() =>
+                            {
+                                downloads.Add(new Chaturbate(link));
+                                downloads.Last().StartDownload(downloadPath, () =>
+                                {
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        EliminateVideo(string.Format("Finished downloading {0}.", link), link);
+                                    });
+                                }, () =>
+                                {
+                                    EliminateVideo(string.Format("Finished downloading {0}. An error occured while joining video parts.", link), link);
+                                });
+                                scheduleCount--;
+                                UpdateStreamCount();
+                            });
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                        Thread.Sleep(900000);
+                    }
+                });
+                scheduleCount++;
+                schedule.Start();
+                UpdateStreamCount();
+            }
         }
     }
 }
