@@ -1,0 +1,3 @@
+[submodule "FFMpegSharp"]
+	path = FFMpegSharp
+	url = https://github.com/vladjerca/FFMpegSharp.git
