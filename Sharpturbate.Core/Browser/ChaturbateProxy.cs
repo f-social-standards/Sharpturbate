@@ -37,17 +37,24 @@ namespace Sharpturbate.Core.Browser
 
         public static Uri GetStreamLink(ChaturbateModel model)
         {
-            var request = WebRequest.Create(model.Link.AbsoluteUri);
-
-            using (var response = request.GetResponse())
+            try
             {
-                var document = new HtmlParser().Parse(response.GetResponseStream());
+                var request = WebRequest.Create(model.Link.AbsoluteUri);
 
-                var streamScript = document.Scripts.FirstOrDefault(x => x.InnerHtml.Contains(_streamExtension));
+                using (var response = request.GetResponse())
+                {
+                    var document = new HtmlParser().Parse(response.GetResponseStream());
 
-                var result = _regExp.Match(streamScript.InnerHtml).Value;
+                    var streamScript = document.Scripts.FirstOrDefault(x => x.InnerHtml.Contains(_streamExtension));
 
-                return new Uri(result);
+                    var result = _regExp.Match(streamScript.InnerHtml).Value;
+
+                    return new Uri(result);
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 

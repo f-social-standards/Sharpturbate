@@ -72,15 +72,17 @@ namespace Sharpturbate.Ui.Config
                 }
             }
 
-            public static IEnumerable<CamModel> Favorites
+            public static IEnumerable<Cam> Favorites
             {
                 get
                 {
-                    return Current.Models.Select(x => new CamModel(x, true));
+                    return Current.Models.Select(x => File.Exists($"{CacheDirectory}\\{x.StreamName}.png") ? 
+                                                                    new Cam(x, true).ChangeSource($"{CacheDirectory}\\{x.StreamName}.png") : 
+                                                                    new Cam(x, true)).OrderBy(x => x.StreamName);
                 }
             }
 
-            public static void ToggleFavorite(CamModel cam)
+            public static void ToggleFavorite(Cam cam)
             {
                 var favorite = Current.Models.FirstOrDefault(x => x.StreamName == cam.StreamName);
 

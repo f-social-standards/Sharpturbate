@@ -21,9 +21,10 @@ namespace Sharpturbate.Ui.DataSource
         public static Rooms CurrentRoom { get; private set; } = Rooms.Featured;
         public static int CurrentPage { get; private set; } = 0;
 
+        private static int cacheTimeout = 180;
         private static Dictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>> Cache { get; set; } = new Dictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>>();
 
-        public static async Task<IEnumerable<CamModel>> Get(Rooms type, int page = 1)
+        public static async Task<IEnumerable<Cam>> Get(Rooms type, int page = 1)
         {
             CurrentRoom = type;
             CurrentPage = page;
@@ -42,7 +43,7 @@ namespace Sharpturbate.Ui.DataSource
             }
             else
             {
-                if(DateTime.Now.Subtract(Cache[key].Timestamp).TotalSeconds > 60)
+                if(DateTime.Now.Subtract(Cache[key].Timestamp).TotalSeconds > cacheTimeout)
                 {
                     var response = await ChaturbateProxy.GetStreamsAsync(type, page);
 
@@ -51,7 +52,7 @@ namespace Sharpturbate.Ui.DataSource
                 }
             }
 
-            return Cache[key].Value.Select(x => new CamModel(x, Settings.Favorites.Any(model => model.StreamName == x.StreamName)));
+            return Cache[key].Value.Select(x => new Cam(x, Settings.Favorites.Any(model => model.StreamName == x.StreamName)));
         }
     }
 }

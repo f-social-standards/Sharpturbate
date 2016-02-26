@@ -11,6 +11,7 @@ namespace Sharpturbate.Core.Enums
         Active,
         Joining,
         TimeOut,
-        Idle
+        Idle,
+        IdleNoJoin
     }
 }

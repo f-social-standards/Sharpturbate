@@ -1,14 +1,20 @@
 ﻿using Caliburn.Micro;
 using NLog;
 using Sharpturbate.Core;
+using Sharpturbate.Core.Browser;
 using Sharpturbate.Core.Enums;
+using Sharpturbate.Ui.Config;
 using Sharpturbate.Ui.DataSource;
 using Sharpturbate.Ui.Logging;
 using Sharpturbate.Ui.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using static Sharpturbate.Ui.Config.UserSettings<Sharpturbate.Core.Models.ChaturbateSettings>;
 
 namespace Sharpturbate.Ui.ViewModels
@@ -17,9 +23,53 @@ namespace Sharpturbate.Ui.ViewModels
     {
         public ShellViewModel()
         {
-            DisplayName = "Sharpturbate";
+            TaskbarVisibility = Visibility.Hidden;
+            DisplayName = AppSettings.AppName;
             DownloadLocation = Settings.DownloadLocation;
+            Interval = 15;
             LoadModels();
+        }
+
+        public IEnumerable<Rooms> Categories { get; set; } = ChaturbateRooms.Categories;
+
+        public BindableCollection<Cam> FavoriteModels { get; set; } = new BindableCollection<Cam>();
+
+        public BindableCollection<Cam> CamModels { get; set; } = new BindableCollection<Cam>();
+
+        public BindableCollection<SharpturbateWorker> DownloadQueue { get; set; } = new BindableCollection<SharpturbateWorker>();
+
+        public BindableCollection<Cam> ScheduleQueue { get; set; } = new BindableCollection<Cam>();
+
+        public int ActiveDownloads
+        {
+            get
+            {
+                return DownloadQueue.Count(x => x.Status == StreamStatus.Active);
+            }
+        }
+
+        public int FinishedDownloads
+        {
+            get
+            {
+                return DownloadQueue.Count(x => x.Status == StreamStatus.Idle);
+            }
+        }
+        
+        public int Interval { get; set; }
+
+        private Cam scheduledModel { get; set; }
+        public Cam ScheduledModel
+        {
+            get
+            {
+                return scheduledModel;
+            }
+            set
+            {
+                scheduledModel = value;
+                NotifyOfPropertyChange(() => ScheduledModel);
+            }
         }
 
         private string downloadLocation;
@@ -47,25 +97,25 @@ namespace Sharpturbate.Ui.ViewModels
             }
         }
 
-        private bool showSettings;
-        public bool ShowSettings
+        private bool showSettingsDialog;
+        public bool ShowSettingsDialog
         {
-            get { return showSettings; }
+            get { return showSettingsDialog; }
             set
             {
-                showSettings = value;
-                NotifyOfPropertyChange(() => ShowSettings);
+                showSettingsDialog = value;
+                NotifyOfPropertyChange(() => ShowSettingsDialog);
             }
         }
 
-        private bool showScheduler;
-        public bool ShowScheduler
+        private bool showSchedulerDialog;
+        public bool ShowSchedulerDialog
         {
-            get { return showScheduler; }
+            get { return showSchedulerDialog; }
             set
             {
-                showScheduler = value;
-                NotifyOfPropertyChange(() => ShowScheduler);
+                showSchedulerDialog = value;
+                NotifyOfPropertyChange(() => ShowSchedulerDialog);
             }
         }
 
@@ -97,19 +147,115 @@ namespace Sharpturbate.Ui.ViewModels
             }
         }
 
-        public BindableCollection<string> FavoriteModels { get; set; }
+        public WindowState windowState;
+        public WindowState WindowState
+        {
+            get
+            {
+                return windowState;
+            }
+            set
+            {
+                windowState = value;
+                NotifyOfPropertyChange(() => WindowState);
+            }
+        }
 
-        public string ScheduledModel { get; set; }
+        public Visibility windowVisibility;
+        public Visibility WindowVisibility
+        {
+            get
+            {
+                return windowVisibility;
+            }
+            set
+            {
+                windowVisibility = value;
+                NotifyOfPropertyChange(() => WindowVisibility);
+            }
+        }
 
-        public IEnumerable<Rooms> Categories { get; set; } = ChaturbateRooms.Categories;
+        public Visibility taskbarVisibility;
+        public Visibility TaskbarVisibility
+        {
+            get
+            {
+                return taskbarVisibility;
+            }
+            set
+            {
+                taskbarVisibility = value;
+                NotifyOfPropertyChange(() => TaskbarVisibility);
+            }
+        }
 
-        public BindableCollection<CamModel> CamModels { get; set; } = new BindableCollection<CamModel>();
+        private string message;
+        public string Message
+        {
+            get
+            {
+                return message;
+            }
+            set
+            {
+                message = value;
+                NotifyOfPropertyChange(() => Message);
+            }
+        }
+        public bool showMessageDialog;
+        public bool ShowMessageDialog
+        {
+            get
+            {
+                return showMessageDialog;
+            }
+            set
+            {
+                showMessageDialog = value;
+                NotifyOfPropertyChange(() => ShowMessageDialog);
+            }
+        }
+        public void ShowMessage(string message)
+        {
+            Message = message;
+            ShowMessageDialog = true;
+        }
 
-        public BindableCollection<SharpturbateWorker> DownloadQueue { get; set; } = new BindableCollection<SharpturbateWorker>();
+        public void ShowLog(SharpturbateWorker model)
+        {            
+            var logLines = Regex.Split(model.Log, "\r\n|\r|\n").ToList();
+
+            if (logLines.Count > 10)
+            {
+                logLines = logLines.Skip(logLines.Count - 10).Take(10).ToList();
+
+                logLines.Insert(0, "...");
+            }
+
+            ShowMessage(string.Join(Environment.NewLine, logLines));
+        }
+
+        public void ScheduleDownload()
+        {
+            var schedule = Task.Run(() => {
+                Uri streamUri = default(Uri);
+                var scheduledCam = ScheduledModel;
+                var rng = new Random(Environment.TickCount);
+
+                while (streamUri == null)
+                {
+                    int timeoutMiliseconds = (Interval + rng.Next(-5, 5)) * 1000;
+                    streamUri = ChaturbateProxy.GetStreamLink(scheduledCam);
+                    Thread.Sleep(timeoutMiliseconds);
+                }
+
+                DownloadCam(scheduledCam);
+            });
+        }
 
         public void DownloadCam()
         {
-            var streamRegex = @"(http|https):(\/\/chaturbate.com\/)[A-Za-z0-9@#%^&*]+(\/?)";
+            var streamRegex = @"(http|https):(\/\/chaturbate.com\/)[a-zA-Z0-9._-]+(\/?)";
 
             var match = Regex.Match(StreamURL, streamRegex);
 
@@ -121,13 +267,17 @@ namespace Sharpturbate.Ui.ViewModels
                 }
                 var streamName = StreamURL.Split('/').Last();
 
-                CamModel model = new CamModel(streamName);
+                Cam model = new Cam(streamName);
 
                 DownloadCam(model);
             }
+            else
+            {
+                ShowMessage("Please enter a valid stream Url.");
+            }
         }
 
-        public void DownloadCam(CamModel cam)
+        public void DownloadCam(Cam cam)
         {
             SharpturbateWorker worker = new SharpturbateWorker(cam);
 
@@ -147,8 +297,12 @@ namespace Sharpturbate.Ui.ViewModels
                 }
 
                 Log.Instance.Log(level, message);
-
-                NotifyOfPropertyChange(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => {
+                    NotifyOfPropertyChange(() => DownloadQueue);
+                    NotifyOfPropertyChange(() => DownloadQueue.FirstOrDefault(x => x.Model.StreamName == worker.Model.StreamName).LastUpdate);
+                    NotifyOfPropertyChange(() => DownloadQueue.FirstOrDefault(x => x.Model.StreamName == worker.Model.StreamName).Status);
+                    NotifyOfPropertyChange(() => DownloadQueue.FirstOrDefault(x => x.Model.StreamName == worker.Model.StreamName).ActivePart);
+                });
             };
 
             worker.Start(DownloadLocation);
@@ -192,18 +346,35 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void OpenSettings()
         {
-            ShowSettings = true;
+            ShowSettingsDialog = true;
         }
 
         public void OpenScheduler()
         {
-            FavoriteModels = new BindableCollection<string>(Settings.Favorites.Select(x => x.StreamName));
-            ShowScheduler = true;
+            FavoriteModels.Clear();
+            FavoriteModels.AddRange(Settings.Favorites);            
+            ShowSchedulerDialog = true;
         }
 
-        public void ToggleFavorite(CamModel model)
+        public void ToggleFavorite(Cam model)
+        { 
+            Settings.ToggleFavorite(model);
+        }
+
+        public void OnStateChanged()
         {
-            Config.UserSettings<Core.Models.ChaturbateSettings>.Settings.ToggleFavorite(model);
+            if (WindowState == WindowState.Minimized)
+            {
+                WindowVisibility = Visibility.Hidden;
+                TaskbarVisibility = Visibility.Visible;
+            }
+        }
+
+        public void ShowWindow()
+        {
+            TaskbarVisibility = Visibility.Hidden;
+            WindowVisibility = Visibility.Visible;
+            WindowState = WindowState.Maximized;
         }
 
         private async void LoadContent(Rooms type, int page)
@@ -212,7 +383,7 @@ namespace Sharpturbate.Ui.ViewModels
             IsLoaderVisible = Visibility.Visible;
             CamModels.AddRange((await ChaturbateCache.Get(type, page)));
             IsLoaderVisible = Visibility.Hidden;
-            ShowSettings = string.IsNullOrWhiteSpace(Settings.DownloadLocation);
+            ShowSettingsDialog = string.IsNullOrWhiteSpace(Settings.DownloadLocation);
         }
     }
 }

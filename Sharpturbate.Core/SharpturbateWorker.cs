@@ -16,7 +16,7 @@ namespace Sharpturbate.Core
 {
     public delegate void LogHandler(LogType type, string message);
 
-    public class SharpturbateWorker
+    public sealed class SharpturbateWorker : IDisposable
     {
         #region Private Region
         private volatile IList<string> clipParts;
@@ -45,6 +45,7 @@ namespace Sharpturbate.Core
             }
         }
 
+        private volatile Stopwatch totalStreamTime;
         private volatile StringBuilder log;
         private volatile Uri uri;
 
@@ -53,6 +54,8 @@ namespace Sharpturbate.Core
                               stopped = false;
 
         private static readonly int _allowedTimeout = 2;
+        
+        private volatile int exceptionCount = 0;
 
         private void LogProgress(LogType type, string message)
         {
@@ -84,22 +87,37 @@ namespace Sharpturbate.Core
         public void Start(string outputPath)
         {
             Stopwatch timeoutWatch = default(Stopwatch);
+            totalStreamTime = Stopwatch.StartNew();
 
             Task.Run(() => 
             {
-                try
-                {
+                
                     uri = ChaturbateProxy.GetStreamLink(Model);
-                    for (;;)
+
+                    if(uri == null)
                     {
+                        LogProgress(LogType.Warning, string.Format("{0} is offline, cannot download stream right now.", Model.StreamName));
+                        return;
+                    }
+
+                for (;;)
+                {
+                    try
+                    {
+                        if (exceptionCount > 200 || totalStreamTime.Elapsed.TotalHours > 4)
+                            Stop();
+
                         if (removed || Status == StreamStatus.Idle)
                         {
-                            LogProgress(LogType.Update, "Show recored succesfully for {0}.");
+                            if (!removed)
+                                LogProgress(LogType.Update, string.Format("Show recored succesfully for {0}.", Model.StreamName));
 
                             foreach (string clip in clipParts)
                                 File.Delete(clip);
 
-                            LogProgress(LogType.Success, "Temporary files cleared succesfully.");
+                            LogProgress(LogType.Success, string.Format("Temporary files cleared succesfully for {0}.", Model.StreamName));
+
+                            break;
                         }
 
                         // if the stream is active
@@ -131,7 +149,7 @@ namespace Sharpturbate.Core
                             if (timeoutWatch.Elapsed.TotalMinutes > _allowedTimeout || stopped)
                             {
                                 string finalOutputPath = string.Format(@"{0}\{1}_recorded_on_{2}_{3}.mp4", outputPath, Model.StreamName, DateTime.Now.ToString("MM_dd_yyyy"), DateTime.Now.Ticks);
-                                
+
                                 Status = StreamStatus.Joining;
 
                                 LogProgress(LogType.Update, string.Format("Joining {0} temporary parts for {1}...", clipParts.Count, Model.StreamName));
@@ -144,16 +162,18 @@ namespace Sharpturbate.Core
                                 }
                                 else
                                 {
-                                    LogProgress(LogType.Warning, string.Format("File parts could not be joined."));
+                                    Status = StreamStatus.IdleNoJoin;
+                                    LogProgress(LogType.Warning, string.Format("File parts could not be joined for stream {0}.", Model.StreamName));
                                     return;
                                 }
                             }
                         }
                     }
-                }
-                catch(Exception e)
-                {
-                    LogProgress(LogType.Error, string.Format("Something happened while downloading the stream. Info: {0}", e.Message));
+                    catch (Exception e)
+                    {
+                        LogProgress(LogType.Error, string.Format("Something happened while downloading the stream. Info: {0}", e.Message));
+                        exceptionCount++;
+                    }
                 }
             });
         }
@@ -185,6 +205,11 @@ namespace Sharpturbate.Core
             {
                 LogProgress(LogType.Update, "Downloaded parts are queued for removal.");
             }
+        }
+
+        public void Dispose()
+        {
+            ffmpeg.Dispose();
         }
     }
 }
