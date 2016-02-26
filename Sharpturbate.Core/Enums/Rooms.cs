@@ -6,7 +6,7 @@ namespace Sharpturbate.Core.Enums
 {
     public enum Rooms
     {
-        Featured,
+        Featured = 1,
         Female,
         Transsexual,
         Couple,

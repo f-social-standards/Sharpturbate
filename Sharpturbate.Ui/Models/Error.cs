@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace Sharpturbate.Ui.Models
 {
@@ -9,19 +10,23 @@ namespace Sharpturbate.Ui.Models
 
         public Error(Exception ex)
         {
-            TimeStamp = DateTime.Now;
-            Message = ex.Message;
-            StackTrace = ex.StackTrace;
-            InnerException = new Error()
+            Message = ex?.Message;
+            StackTrace = ex?.StackTrace;
+            ex.Source = ex?.Source;
+
+            if(ex.InnerException != null)
             {
-                Message = ex.InnerException?.Message,
-                StackTrace = ex.InnerException?.StackTrace
-            };
+                InnerException = new Error(ex.InnerException);
+            }
         }
 
-        public DateTime TimeStamp { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Message { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string StackTrace { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string Source { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Error InnerException { get; set; }
     }
 }

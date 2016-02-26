@@ -1,17 +1,19 @@
 ﻿using Caliburn.Micro;
+using NLog;
 using Sharpturbate.Core;
-using Sharpturbate.Core.Browser;
 using Sharpturbate.Core.Enums;
 using Sharpturbate.Ui.DataSource;
+using Sharpturbate.Ui.Logging;
 using Sharpturbate.Ui.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
-using static Sharpturbate.Ui.Serializer.UserSettings<Sharpturbate.Core.Models.ChaturbateSettings>;
+using static Sharpturbate.Ui.Config.UserSettings<Sharpturbate.Core.Models.ChaturbateSettings>;
 
 namespace Sharpturbate.Ui.ViewModels
 {
-    public class ShellViewModel : Conductor<IScreen>
+    public sealed class ShellViewModel : Conductor<IScreen>
     {
         public ShellViewModel()
         {
@@ -20,9 +22,19 @@ namespace Sharpturbate.Ui.ViewModels
             LoadModels();
         }
 
-        public string DownloadLocation { get; set; }
-
-        public IEnumerable<Rooms> Categories { get; set; } = ChaturbateRooms.Categories;
+        private string downloadLocation;
+        public string DownloadLocation
+        {
+            get
+            {
+                return downloadLocation;
+            }
+            set
+            {
+                downloadLocation = value;
+                NotifyOfPropertyChange(() => DownloadLocation);
+            }
+        }
 
         private Visibility isLoaderVisible;
         public Visibility IsLoaderVisible
@@ -46,6 +58,17 @@ namespace Sharpturbate.Ui.ViewModels
             }
         }
 
+        private bool showScheduler;
+        public bool ShowScheduler
+        {
+            get { return showScheduler; }
+            set
+            {
+                showScheduler = value;
+                NotifyOfPropertyChange(() => ShowScheduler);
+            }
+        }
+
         private int currentPage = 1;
         public int CurrentPage
         {
@@ -60,7 +83,25 @@ namespace Sharpturbate.Ui.ViewModels
             }
         }
 
-        public string StreamURL { get; set; }
+        private string streamUrl;
+        public string StreamURL
+        {
+            get
+            {
+                return streamUrl;
+            }
+            set
+            {
+                streamUrl = value;
+                NotifyOfPropertyChange(() => StreamURL);
+            }
+        }
+
+        public BindableCollection<string> FavoriteModels { get; set; }
+
+        public string ScheduledModel { get; set; }
+
+        public IEnumerable<Rooms> Categories { get; set; } = ChaturbateRooms.Categories;
 
         public BindableCollection<CamModel> CamModels { get; set; } = new BindableCollection<CamModel>();
 
@@ -68,19 +109,22 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void DownloadCam()
         {
-            if(StreamURL.EndsWith("/"))
-            {
-                StreamURL = StreamURL.Substring(0, StreamURL.Length - 1);
-            }
-            var streamName = StreamURL.Split('/').Last();
-            CamModel model = new CamModel(new Core.Models.ChaturbateModel() {
-                Link = new System.Uri(StreamURL),
-                StreamName = streamName,
-                ImageSource = new System.Uri(string.Format("https://cdn-s.highwebmedia.com/uHK3McUtGCG3SMFcd4ZJsRv8/roomimage/{0}.jpg", streamName)),
-                Room = Rooms.Featured
-            });
+            var streamRegex = @"(http|https):(\/\/chaturbate.com\/)[A-Za-z0-9@#%^&*]+(\/?)";
 
-            DownloadCam(model);
+            var match = Regex.Match(StreamURL, streamRegex);
+
+            if (match.Success)
+            {
+                if (StreamURL.EndsWith("/"))
+                {
+                    StreamURL = StreamURL.Substring(0, StreamURL.Length - 1);
+                }
+                var streamName = StreamURL.Split('/').Last();
+
+                CamModel model = new CamModel(streamName);
+
+                DownloadCam(model);
+            }
         }
 
         public void DownloadCam(CamModel cam)
@@ -88,6 +132,22 @@ namespace Sharpturbate.Ui.ViewModels
             SharpturbateWorker worker = new SharpturbateWorker(cam);
 
             worker.OnEvent += (LogType type, string message) => {
+
+                LogLevel level = default(LogLevel);
+
+                switch(type)
+                {
+                    case LogType.Success:
+                    case LogType.Update:
+                        level = LogLevel.Info; break;
+                    case LogType.Error:
+                        level = LogLevel.Error; break;
+                    case LogType.Warning:
+                        level = LogLevel.Warn; break;
+                }
+
+                Log.Instance.Log(level, message);
+
                 NotifyOfPropertyChange(null);
             };
 
@@ -111,7 +171,7 @@ namespace Sharpturbate.Ui.ViewModels
         public void LoadModels(Rooms type = Rooms.Featured)
         {
             CurrentPage = 1;
-            LoadContent(type);
+            LoadContent(type, CurrentPage);
         }
 
         public void ChangePage(int increment)
@@ -127,7 +187,7 @@ namespace Sharpturbate.Ui.ViewModels
         public void SaveSettings()
         {
             if(!string.IsNullOrWhiteSpace(DownloadLocation))
-                Settings.DownloadLocation = DownloadLocation;
+                Config.UserSettings<Core.Models.ChaturbateSettings>.Settings.DownloadLocation = DownloadLocation;
         }
 
         public void OpenSettings()
@@ -135,12 +195,18 @@ namespace Sharpturbate.Ui.ViewModels
             ShowSettings = true;
         }
 
-        public void AddFavorite(CamModel model)
+        public void OpenScheduler()
         {
-            Settings.AddFavorite(model);
+            FavoriteModels = new BindableCollection<string>(Settings.Favorites.Select(x => x.StreamName));
+            ShowScheduler = true;
         }
 
-        private async void LoadContent(Rooms type = Rooms.Featured, int page = 1)
+        public void ToggleFavorite(CamModel model)
+        {
+            Config.UserSettings<Core.Models.ChaturbateSettings>.Settings.ToggleFavorite(model);
+        }
+
+        private async void LoadContent(Rooms type, int page)
         {
             CamModels.Clear();
             IsLoaderVisible = Visibility.Visible;

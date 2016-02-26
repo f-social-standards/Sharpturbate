@@ -53,11 +53,15 @@ namespace Sharpturbate.Core.Browser
 
         public static async Task<IEnumerable<ChaturbateModel>> GetStreamsAsync(Rooms room = Rooms.Featured, int page = 1)
         {
-            string roomUrl = _baseUrl;
+            string roomUrl = string.Empty;
 
             if (room != Rooms.Featured)
             {
-                roomUrl = string.Format("{0}/{1}-cams/?page={2}", roomUrl, room.ToString().ToLower(), page);
+                roomUrl = string.Format("{0}/{1}-cams/?page={2}", _baseUrl, room.ToString().ToLower(), page);
+            }
+            else
+            {
+                roomUrl = string.Format("{0}/?page={1}", _baseUrl, page);
             }
 
             var request = WebRequest.Create(roomUrl);

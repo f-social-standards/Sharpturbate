@@ -19,6 +19,7 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Button.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.CheckBox.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ProgressBar.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ComboBox.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -31,7 +32,49 @@
                      IsIndeterminate="True"
                      Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="4"/>
         </materialDesign:Card>
-        <materialDesign:DialogHost Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsOpen="{Binding ShowSettings}" x:Name="SettingsContainer">
+        <materialDesign:DialogHost x:Name="ScheduleDialog" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsOpen="{Binding ShowScheduler}">
+            <materialDesign:DialogHost.DialogContent>
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock>Schedule download:</TextBlock>
+                    <ComboBox Grid.Row="1" Grid.Column="3" materialDesign:TextFieldAssist.Hint="Cam Girl" ItemsSource="{Binding FavoriteModels}" SelectedItem="{Binding ScheduledModel}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                    <!--<ToggleButton VerticalAlignment="Center" IsChecked="{Binding IsSelected}"
+                                              Style="{StaticResource MaterialDesignActionToggleButton}">
+                                        <Image Source="{Binding ImageSource}" Stretch="UniformToFill" Margin="10,0,0,0"></Image>
+                                    </ToggleButton>-->
+                                    <TextBlock Text="{Binding StreamName}" FontSize="18" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <StackPanel Orientation="Horizontal" Grid.Row="3"
+                                                    Margin="0 16 0 0">
+                        <Button IsDefault="True" Style="{DynamicResource MaterialDesignFlatButton}"
+                                Command="materialDesign:DialogHost.CloseDialogCommand"
+                                cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                cal:Message.Attach="[Event Click] = [Action Schedule($dataContext)]">
+                            <Button.CommandParameter>
+                                <system:Boolean>True</system:Boolean>
+                            </Button.CommandParameter>
+                            ACCEPT
+                        </Button>
+                        <Button IsCancel="True" Margin="8 0 0 0" Style="{DynamicResource MaterialDesignFlatButton}"
+                                                            Command="materialDesign:DialogHost.CloseDialogCommand">
+                            <Button.CommandParameter>
+                                <system:Boolean>False</system:Boolean>
+                            </Button.CommandParameter>
+                            CANCEL
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
+        <materialDesign:DialogHost x:Name="SettingsDialog" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsOpen="{Binding ShowSettings}">
             <materialDesign:DialogHost.DialogContent>
                 <Grid Margin="16">
                     <Grid.RowDefinitions>
@@ -65,11 +108,11 @@
                     </StackPanel>
                 </Grid>
             </materialDesign:DialogHost.DialogContent>
-            <ScrollViewer x:Name="CamGridScroll" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto" Margin="0,70,0,0">
+            <ScrollViewer x:Name="GalleryScroll" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto" Margin="0,70,0,0">
                 <ItemsControl ItemsSource="{Binding Path=CamModels}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <WrapPanel  x:Name="CamGrid" Margin="0 0 8 8" ItemWidth="200">
+                            <WrapPanel x:Name="CamGrid" Margin="0 0 8 8" ItemWidth="200">
                                 <materialDesign:Card Margin="4 4 0 0">
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -77,23 +120,23 @@
                                             <RowDefinition Height="*" />
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <Image Source="{Binding ImageSource}" Height="140" Width="196" Stretch="UniformToFill" />
-                                        <StackPanel Grid.Row="1" Margin="8 24 8 0" >
+                                        <Image x:Name="CamImage" Source="{Binding ImageSource}" Height="140" Width="196" Stretch="UniformToFill" />
+                                        <StackPanel x:Name="CamName" Grid.Row="1" Margin="8 24 8 0" >
                                             <TextBlock Text="{Binding StreamName}" FontWeight="Bold" ></TextBlock>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Grid.Row="2" Orientation="Horizontal" Margin="8">
-                                            <ToggleButton Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                                            <ToggleButton x:Name="CamDownload" Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
                                                       cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                                       cal:Message.Attach="[Event Click] = [Action DownloadCam($dataContext)]"
                                                       Margin="8 0 0 0" 
                                                       IsChecked="False">
                                                 <materialDesign:PackIcon Kind="Download" Height="21" Width="21" />
                                             </ToggleButton>
-                                            <ToggleButton Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                                            <ToggleButton x:Name="CamFavorite" Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
                                                       cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
-                                                      cal:Message.Attach="[Event Click] = [Action AddFavorite($dataContext)]"
+                                                      cal:Message.Attach="[Event Click] = [Action ToggleFavorite($dataContext)]"
                                                       Margin="8 0 0 0" 
-                                                      IsChecked="False">
+                                                      IsChecked="{Binding IsFavorite}">
                                                 <materialDesign:PackIcon Kind="Heart" Height="21" Width="21" />
                                             </ToggleButton>
                                         </StackPanel>
@@ -128,7 +171,7 @@
                                   DockPanel.Dock="Top"
                                   HorizontalAlignment="Right" Margin="16"
                                   IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}" />
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto" Margin="0,70,0,0">
+                    <ScrollViewer x:Name="DownloadQueue" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto" Margin="0,70,0,0">
                         <ItemsControl Grid.Column="2" 
                                   ItemsSource="{Binding DownloadQueue}"
                                   Grid.IsSharedSizeScope="True">
@@ -142,7 +185,7 @@
                                                 <ColumnDefinition />
                                             </Grid.ColumnDefinitions>
                                             <ToggleButton VerticalAlignment="Center" IsChecked="{Binding IsSelected}"
-                                          Style="{StaticResource MaterialDesignFlatToggleButton}">
+                                          Style="{StaticResource MaterialDesignActionToggleButton}">
                                                 <Image Source="{Binding Model.ImageSource}" Stretch="UniformToFill" Margin="10,0,0,0"></Image>
                                             </ToggleButton>
                                             <StackPanel Margin="8 0 0 0" Orientation="Horizontal" Grid.Column="1">
@@ -180,7 +223,7 @@
                         <ToggleButton Style="{StaticResource MaterialDesignHamburgerToggleButton}" IsChecked="False"
                                       x:Name="MenuToggleButton"/>
                         <materialDesign:PopupBox DockPanel.Dock="Right" PlacementMode="BottomAndAlignRightEdges">
-                            <StackPanel>
+                            <StackPanel x:Name="CategoryMenu">
                                 <ItemsControl x:Name="Buttons" ItemsSource="{Binding Categories}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -204,16 +247,23 @@
                                 <Button Style="{DynamicResource MaterialDesignToolButton}">
                                     <materialDesign:PackIcon Kind="Webcam" />
                                 </Button>
-                                <TextBox Grid.Column="1" Margin="8 0 0 0" materialDesign:TextFieldAssist.Hint="Download a stream now..." 
+                                <TextBox x:Name="CamUrlInput" Grid.Column="1" Margin="8 0 0 0" materialDesign:TextFieldAssist.Hint="Download a stream now..." 
                                      materialDesign:TextFieldAssist.DecorationVisibility="Hidden" BorderThickness="0"
                                      MinWidth="200" VerticalAlignment="Center" Text="{Binding StreamURL, Mode=TwoWay}" />
-                                <Button Style="{DynamicResource MaterialDesignToolButton}" Grid.Column="2" 
+                                <Button x:Name="CamUrlButton" Style="{DynamicResource MaterialDesignToolButton}" Grid.Column="2" 
                                         cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                         cal:Message.Attach="[Event Click] = [Action DownloadCam()]">
                                     <materialDesign:PackIcon Kind="PlusBox" Opacity=".56" Margin="8 0 0 0" />
                                 </Button>
                             </Grid>
                         </materialDesign:ColorZone>
+                        <StackPanel x:Name="Scheduler" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40" Foreground="White"
+                                    cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                    cal:Message.Attach="[Event Click] = [Action OpenScheduler()]" Margin="10,0,10,0">
+                                <materialDesign:PackIcon Kind="Clock" Height="30" Width="30" Opacity="1" />
+                            </Button>
+                        </StackPanel>
                         <StackPanel x:Name="Pager" Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40" Foreground="White"
                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
@@ -221,14 +271,14 @@
                                 <materialDesign:PackIcon Kind="ArrowLeftDropCircleOutline" Height="30" Width="30" Opacity="1" />
                             </Button>
                             <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" Text="{Binding CurrentPage, StringFormat='Page {0}'}" Margin="5,5,5,0" />
-                            <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40" Foreground="White"
+                            <Button x:Name="NextPage" Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40" Foreground="White"
                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                     cal:Message.Attach="[Event Click] = [Action ChangePage('1')]">
                                 <materialDesign:PackIcon Kind="ArrowRightDropCircleOutline" Height="30" Width="30" Opacity="1"/>
                             </Button>
-                            <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40" Foreground="White"
+                            <Button x:Name="PreviousPage" Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40" Foreground="White"
                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
-                                    cal:Message.Attach="[Event Click] = [Action OpenSettings()]" Margin="40,0,0,0">
+                                    cal:Message.Attach="[Event Click] = [Action OpenSettings()]" Margin="20,0,0,0">
                                 <materialDesign:PackIcon Kind="Settings" Height="30" Width="30" Opacity="1"/>
                             </Button>
                         </StackPanel>
