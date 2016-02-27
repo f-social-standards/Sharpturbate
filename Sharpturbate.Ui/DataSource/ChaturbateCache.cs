@@ -3,8 +3,10 @@ using Sharpturbate.Core.Enums;
 using Sharpturbate.Core.Models;
 using Sharpturbate.Ui.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using static Sharpturbate.Ui.Config.UserSettings<Sharpturbate.Core.Models.ChaturbateSettings>;
 
@@ -22,7 +24,25 @@ namespace Sharpturbate.Ui.DataSource
         public static int CurrentPage { get; private set; } = 0;
 
         private static int cacheTimeout = 180;
-        private static Dictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>> Cache { get; set; } = new Dictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>>();
+        private static ConcurrentDictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>> Cache { get; set; } = new ConcurrentDictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>>();
+        private static Func<Rooms, int, Task<IEnumerable<ChaturbateModel>>> getModels = async (Rooms roomType, int pageNumber) =>
+        {
+            return roomType == Rooms.Favorites ? await ChaturbateProxy.GetFavorites(Settings.Current) : await ChaturbateProxy.GetStreamsAsync(roomType, pageNumber);
+        };
+
+        static ChaturbateCache()
+        {
+            int sleepFor = cacheTimeout * 1000;
+            Task.Run(() => {
+                Thread.Sleep(sleepFor);
+                var itemsToRemove = Cache.Where(x => DateTime.Now.Subtract(x.Value.Timestamp).TotalSeconds > cacheTimeout).ToArray();
+                foreach(var entry in itemsToRemove)
+                {
+                    CacheEntry<IEnumerable<ChaturbateModel>> outVar;
+                    Cache.TryRemove(entry.Key, out outVar);
+                }
+            });
+        }
 
         public static async Task<IEnumerable<Cam>> Get(Rooms type, int page = 1)
         {
@@ -33,19 +53,24 @@ namespace Sharpturbate.Ui.DataSource
 
             if(!Cache.ContainsKey(key))
             {
-                var response = await ChaturbateProxy.GetStreamsAsync(type, page);
+                var response = await getModels(type, page);
 
-                Cache.Add(key, new CacheEntry<IEnumerable<ChaturbateModel>>
+                bool success = false;
+
+                while (!success)
                 {
-                    Timestamp = DateTime.Now,
-                    Value = response
-                });
+                    success = Cache.TryAdd(key, new CacheEntry<IEnumerable<ChaturbateModel>>
+                    {
+                        Timestamp = DateTime.Now,
+                        Value = response
+                    });
+                }
             }
             else
             {
                 if(DateTime.Now.Subtract(Cache[key].Timestamp).TotalSeconds > cacheTimeout)
                 {
-                    var response = await ChaturbateProxy.GetStreamsAsync(type, page);
+                    var response = await getModels(type, page);
 
                     Cache[key].Timestamp = DateTime.Now;
                     Cache[key].Value = response;

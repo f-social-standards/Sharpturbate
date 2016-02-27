@@ -8,6 +8,14 @@ namespace Sharpturbate.Ui.Models
     public class Cam : ChaturbateModel
     {
         public bool IsFavorite { get; set; }
+        public bool IsDownloading { get; set; }
+        public bool IsNotDownloading
+        {
+            get
+            {
+                return !IsDownloading;
+            }
+        }
 
         public Cam(ChaturbateModel model, bool isFavorite = false)
         {
@@ -16,6 +24,8 @@ namespace Sharpturbate.Ui.Models
             Room = model.Room;
             StreamName = model.StreamName;
             IsFavorite = isFavorite;
+            IsOnline = model.IsOnline;
+            IsDownloading = false;
         }
 
         public Cam(string modelName, bool isFavorite = true)

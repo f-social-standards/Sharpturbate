@@ -27,7 +27,8 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ComboBox.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Slider.xaml" />
             </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        </ResourceDictionary>        
     </Window.Resources>    
     <Grid Width="Auto" Height="Auto">
 
@@ -179,10 +180,11 @@
                                         <StackPanel x:Name="CamName" Grid.Row="1" Margin="8 24 8 0" >
                                             <TextBlock Text="{Binding StreamName}" FontWeight="Bold" ></TextBlock>
                                         </StackPanel>
-                                        <StackPanel HorizontalAlignment="Right" Grid.Row="2" Orientation="Horizontal" Margin="8">
+                                        <StackPanel HorizontalAlignment="Right" Grid.Row="2" Orientation="Horizontal" Margin="8" Visibility="{Binding IsOnline, Converter={StaticResource BoolToVisibility}}">
                                             <ToggleButton x:Name="CamDownload" Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
                                                       cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                                       cal:Message.Attach="[Event Click] = [Action DownloadCam($dataContext)]"
+                                                      Visibility="{Binding IsNotDownloading, Converter={StaticResource BoolToVisibility}}"
                                                       Margin="8 0 0 0" 
                                                       IsChecked="False">
                                                 <materialDesign:PackIcon Kind="Download" Height="21" Width="21" />
@@ -221,15 +223,25 @@
         </materialDesign:DialogHost>
         <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}">
             <materialDesign:DrawerHost.LeftDrawerContent>
-                <DockPanel MinWidth="220">
+                <DockPanel MinWidth="450">
                     <ToggleButton Style="{StaticResource MaterialDesignHamburgerToggleButton}" 
                                   DockPanel.Dock="Top"
                                   HorizontalAlignment="Right" Margin="16"
                                   IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}" />
                     <ScrollViewer x:Name="DownloadQueue" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto" Margin="0,70,0,0">
                         <ItemsControl Grid.Column="2" 
-                                  ItemsSource="{Binding DownloadQueue}"
+                                  xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
                                   Grid.IsSharedSizeScope="True">
+                            <ItemsControl.Resources>
+                                <CollectionViewSource x:Key="Downloads" Source="{Binding DownloadQueue}">
+                                    <CollectionViewSource.SortDescriptions>
+                                        <scm:SortDescription PropertyName="Status" Direction="Ascending"/>
+                                    </CollectionViewSource.SortDescriptions>
+                                </CollectionViewSource>
+                            </ItemsControl.Resources>
+                            <ItemsControl.ItemsSource>
+                                <Binding Source="{StaticResource Downloads}"/>
+                            </ItemsControl.ItemsSource>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border x:Name="Border" Padding="8" BorderThickness="0 0 0 1" BorderBrush="{DynamicResource MaterialDesignDivider}">
@@ -244,21 +256,27 @@
                                                 <Image Source="{Binding Model.ImageSource}" Stretch="UniformToFill"></Image>
                                             </ToggleButton>                                            
                                             <StackPanel Margin="8 0 0 0" Orientation="Horizontal" Grid.Column="1">
-                                                <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" Text="{Binding Model.StreamName}" MinWidth="220" />
+                                                <StackPanel Margin="8 0 0 0" Grid.Column="1">
+                                                    <TextBlock FontWeight="Bold" Text="{Binding Model.StreamName}" />
+                                                    <TextBlock Text="{Binding LastUpdate}" MinWidth="350" />
+                                                    <TextBlock Text="{Binding Status}" />
+                                                </StackPanel>
                                                 <Button Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Margin="0 0 8 0" 
-                                                    ToolTip="Stop download and join video parts"
+                                                    ToolTip="View recording log"                                                    
                                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}" Width="30" Height="30"
                                                     cal:Message.Attach="[Event Click] = [Action ShowLog($dataContext)]">
-                                                    <materialDesign:PackIcon Kind="Stop" Height="20" Width="20" />
+                                                    <materialDesign:PackIcon Kind="MessageTextOutline" Height="20" Width="20" />
                                                 </Button>
                                                 <Button Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Margin="0 0 8 0" 
                                                     ToolTip="Stop download and join video parts"
+                                                    Visibility="{Binding IsWorking, Converter={StaticResource BoolToVisibility}}"
                                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}" Width="30" Height="30"
                                                     cal:Message.Attach="[Event Click] = [Action Stop($dataContext)]">
                                                     <materialDesign:PackIcon Kind="Stop" Height="20" Width="20" />
                                                 </Button>
                                                 <Button Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Margin="0 0 8 0" 
                                                     ToolTip="Stop download and remove video parts"
+                                                    Visibility="{Binding IsWorking, Converter={StaticResource BoolToVisibility}}"
                                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}" Width="30" Height="30"
                                                     cal:Message.Attach="[Event Click] = [Action Delete($dataContext)]">
                                                     <materialDesign:PackIcon Kind="Delete" Height="18" Width="18" />
@@ -325,7 +343,7 @@
                                 <materialDesign:PackIcon Kind="Clock" Height="30" Width="30" Opacity="1" />
                             </Button>
                         </StackPanel>
-                        <StackPanel x:Name="Pager" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <StackPanel x:Name="Pager" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding IsPaged, Converter={StaticResource BoolToVisibility}}">
                             <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40" Foreground="White"
                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                     cal:Message.Attach="[Event Click] = [Action ChangePage('-1')]">

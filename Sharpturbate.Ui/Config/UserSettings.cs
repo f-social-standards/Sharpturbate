@@ -38,7 +38,7 @@ namespace Sharpturbate.Ui.Config
 
             private static T loadedSettings = null;
 
-            private static T Current
+            public static T Current
             {
                 get
                 {

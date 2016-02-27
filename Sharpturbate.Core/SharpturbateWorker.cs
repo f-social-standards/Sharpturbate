@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sharpturbate.Core
@@ -56,17 +57,15 @@ namespace Sharpturbate.Core
         private static readonly int _allowedTimeout = 2;
         
         private volatile int exceptionCount = 0;
-
+        
         private void LogProgress(LogType type, string message)
         {
             var logEntry = string.Format("{0}: {1}", type, message);
+            LastUpdate = logEntry;
+            log.AppendLine(logEntry);
 
             if (OnEvent != null)
                 OnEvent(type, logEntry);
-
-            LastUpdate = logEntry;
-
-            log.AppendLine(logEntry);
         }
         #endregion
 
@@ -76,6 +75,14 @@ namespace Sharpturbate.Core
         public int ActivePart { get; private set; }
         public string Log { get { return log.ToString();  } }
         public string LastUpdate { get; set; }
+        public bool IsWorking
+        {
+            get
+            {
+                return Status == StreamStatus.Active;
+            }
+        }
+
         public SharpturbateWorker(ChaturbateModel model)
         {
             Model = model;
@@ -116,6 +123,9 @@ namespace Sharpturbate.Core
                                 File.Delete(clip);
 
                             LogProgress(LogType.Success, string.Format("Temporary files cleared succesfully for {0}.", Model.StreamName));
+
+                            if (removed)
+                                Status = StreamStatus.Removed;
 
                             break;
                         }
@@ -164,7 +174,7 @@ namespace Sharpturbate.Core
                                 {
                                     Status = StreamStatus.IdleNoJoin;
                                     LogProgress(LogType.Warning, string.Format("File parts could not be joined for stream {0}.", Model.StreamName));
-                                    return;
+                                    break;
                                 }
                             }
                         }
@@ -178,7 +188,23 @@ namespace Sharpturbate.Core
             });
         }
 
-        public void Stop()
+        private async Task<bool> WaitForStatus(StreamStatus status)
+        {
+            var result = await Task.Run(() => {
+                int tries = 0;
+                // wait for five minutes before deciding to let go
+                while (Status != status && tries++ < 150)
+                {
+                    Thread.Sleep(2000);
+                }
+
+                return Status == status;
+            });
+
+            return result;
+        }
+
+        public async Task<bool> Stop()
         {
             try
             {
@@ -190,9 +216,11 @@ namespace Sharpturbate.Core
             {
                 LogProgress(LogType.Error, string.Format("An error occured while stopping the stream. Details: {0}", e.Message));
             }
+
+            return await WaitForStatus(StreamStatus.Idle);
         }
 
-        public void Delete()
+        public async Task<bool> Delete()
         {
             removed = true;
             ffmpeg.Kill();
@@ -205,6 +233,8 @@ namespace Sharpturbate.Core
             {
                 LogProgress(LogType.Update, "Downloaded parts are queued for removal.");
             }
+
+            return await WaitForStatus(StreamStatus.Removed);
         }
 
         public void Dispose()

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Sharpturbate.Core.Enums
+﻿namespace Sharpturbate.Core.Enums
 {
     public enum StreamStatus
     {
@@ -12,6 +6,7 @@ namespace Sharpturbate.Core.Enums
         Joining,
         TimeOut,
         Idle,
-        IdleNoJoin
+        IdleNoJoin,
+        Removed
     }
 }

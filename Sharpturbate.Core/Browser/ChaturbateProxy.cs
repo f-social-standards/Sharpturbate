@@ -91,7 +91,8 @@ namespace Sharpturbate.Core.Browser
                                        Link = new Uri(modelUrl),
                                        ImageSource = new Uri(imageUrl),
                                        StreamName = streamName,
-                                       Room = room
+                                       Room = room,
+                                       IsOnline = true
                                    };
                                });
             }
@@ -99,13 +100,17 @@ namespace Sharpturbate.Core.Browser
 
         public static async Task<IEnumerable<ChaturbateModel>> GetFavorites(ChaturbateSettings settings)
         {
-            var results = await Task.WhenAll(GetStreamsAsync(Rooms.Female), GetStreamsAsync(Rooms.Male), GetStreamsAsync(Rooms.Couple), GetStreamsAsync(Rooms.Transsexual));
+            var aggregatedResults = (await Task.WhenAll(GetStreamsAsync(Rooms.Female), 
+                                             GetStreamsAsync(Rooms.Male), 
+                                             GetStreamsAsync(Rooms.Couple), 
+                                             GetStreamsAsync(Rooms.Transsexual))).SelectMany(x => x).Select(x => x);
 
-            return results
-                    .SelectMany(x => x)
-                    .Where(x => settings.Models
-                                        .FirstOrDefault(model => model.StreamName == x.StreamName) != null)
-                    .ToList();
+            return settings.Models.Select(x =>
+            {
+                x.IsOnline = aggregatedResults.Any(result => result.StreamName == x.StreamName);
+
+                return x;
+            }).OrderBy(x => x.IsOnline);
         }
     }
 }

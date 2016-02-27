@@ -9,5 +9,6 @@ namespace Sharpturbate.Core.Models
         public Uri Link { get; set; }
         public string StreamName { get; set; }
         public Rooms Room { get; set; }
+        public bool IsOnline { get; set; }
     }
 }

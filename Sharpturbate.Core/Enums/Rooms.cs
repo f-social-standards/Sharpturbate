@@ -10,7 +10,8 @@ namespace Sharpturbate.Core.Enums
         Female,
         Transsexual,
         Couple,
-        Male
+        Male,
+        Favorites
     }
 
     public static class ChaturbateRooms
