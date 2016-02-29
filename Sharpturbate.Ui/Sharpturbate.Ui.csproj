@@ -66,10 +66,16 @@
     <ManifestKeyFile>Sharpturbate.Ui_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Caliburn.Micro, Version=2.0.2.0, Culture=neutral, PublicKeyToken=8e5891231f2ed21f, processorArchitecture=MSIL">
@@ -128,10 +134,12 @@
     <Compile Include="AppBootstrapper.cs" />
     <Compile Include="Config\AppSettings.cs" />
     <Compile Include="DataSource\ChaturbateCache.cs" />
+    <Compile Include="Extensions\CamExtensions.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Models\Cam.cs" />
     <Compile Include="Models\Error.cs" />
     <Compile Include="Config\UserSettings.cs" />
+    <Compile Include="RegularExpressions\RegexCollection.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="Views\ShellView.xaml.cs">
       <DependentUpon>ShellView.xaml</DependentUpon>
@@ -167,6 +175,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="Properties\app.manifest" />
     <None Include="Resources\sharpturbate.ico" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -184,7 +193,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <None Include="Sharpturbate.Ui_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

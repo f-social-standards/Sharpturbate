@@ -1,5 +1,4 @@
 ﻿using Caliburn.Micro;
-using Newtonsoft.Json;
 using NLog;
 using Sharpturbate.Core;
 using Sharpturbate.Core.Browser;
@@ -8,6 +7,7 @@ using Sharpturbate.Ui.Config;
 using Sharpturbate.Ui.DataSource;
 using Sharpturbate.Ui.Logging;
 using Sharpturbate.Ui.Models;
+using Sharpturbate.Ui.RegularExpressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -231,7 +231,7 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void ShowLog(SharpturbateWorker model)
         {            
-            var logLines = Regex.Split(model.Log, "\r\n|\r|\n").ToList();
+            var logLines = Regex.Split(model.Log, RegexCollection.NewLine).ToList();
 
             if (logLines.Count > 10)
             {
@@ -263,9 +263,7 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void DownloadCam()
         {
-            var streamRegex = @"(http|https):(\/\/chaturbate.com\/)[a-zA-Z0-9._-]+(\/?)";
-
-            var match = Regex.Match(StreamURL, streamRegex);
+            var match = Regex.Match(StreamURL, RegexCollection.ChaturbateUrl);
 
             if (match.Success)
             {
@@ -287,6 +285,12 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void DownloadCam(Cam cam)
         {
+            if(DownloadQueue.Any(x => x.Model.StreamName == cam.StreamName) || ScheduleQueue.Any(x => x.StreamName == cam.StreamName))
+            {
+                ShowMessage("The stream you are trying to download is already in the schedule or download queue.");
+                return;
+            }
+
             cam.IsDownloading = true;
             CamModels.Refresh();
 
@@ -308,12 +312,12 @@ namespace Sharpturbate.Ui.ViewModels
                 }
 
                 DownloadQueue.Refresh();
-
-                Log.Instance.Log(level, JsonConvert.SerializeObject(message));
+                NotifyOfPropertyChange(() => ActiveDownloads);
+                NotifyOfPropertyChange(() => FinishedDownloads);
+                Log.LogEvent(level, message);
             };
 
-            worker.Start(DownloadLocation);
-
+            worker.Start(DownloadLocation);            
             DownloadQueue.Add(worker);
         }
 
@@ -322,11 +326,12 @@ namespace Sharpturbate.Ui.ViewModels
             if (await worker.Stop())
             {
                 DownloadQueue.Remove(worker);
+                DownloadQueue.Refresh();
             }
             else
             {
                 ShowMessage("It's been some time now... the worker won't stop downloading. It must be 'hard' for him too, if you know what I mean.");
-                Log.Instance.Warn(JsonConvert.SerializeObject("Worker did not stop in a timely manner."));
+                Log.LogEvent(LogLevel.Warn, "Worker did not stop in a timely manner.");
             }
         }
 
@@ -335,11 +340,12 @@ namespace Sharpturbate.Ui.ViewModels
             if (await worker.Delete())
             {
                 DownloadQueue.Remove(worker);
+                DownloadQueue.Refresh();
             }
             else
             {
                 ShowMessage("Apparently it's really 'hard' to let go after so much effort put into it.");
-                Log.Instance.Warn(JsonConvert.SerializeObject("Worker did not remove the partial data in a timely manner."));
+                Log.LogEvent(LogLevel.Warn, "Worker did not remove the partial data in a timely manner.");
             }
         }
 
@@ -373,14 +379,15 @@ namespace Sharpturbate.Ui.ViewModels
         public void OpenScheduler()
         {
             FavoriteModels.Clear();
-            FavoriteModels.AddRange(Settings.Favorites);            
+            FavoriteModels.AddRange(Settings.Favorites.Where(x => 
+                                                            !DownloadQueue.Any(q => q.Model.StreamName == x.StreamName) && 
+                                                            !ScheduleQueue.Any(sq => sq.StreamName == x.StreamName)));            
             ShowSchedulerDialog = true;
         }
 
         public void ToggleFavorite(Cam model)
         {
             Settings.ToggleFavorite(model);
-            CamModels.Refresh();
         }
 
         public void OnStateChanged()
@@ -410,6 +417,23 @@ namespace Sharpturbate.Ui.ViewModels
             IsLoaderVisible = Visibility.Hidden;
             ShowSettingsDialog = string.IsNullOrWhiteSpace(Settings.DownloadLocation);
             NotifyOfPropertyChange(() => IsPaged);
+        }
+
+        public override async void CanClose(Action<bool> callback)
+        {
+            WindowVisibility = Visibility.Hidden;
+
+            foreach (var worker in DownloadQueue)
+            {
+                if (worker.IsWorking)
+                {
+                    await worker.Stop();
+                }
+            }
+
+            callback(true);
+
+            base.CanClose(callback);
         }
     }
 }

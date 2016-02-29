@@ -1,10 +1,14 @@
 ﻿using Newtonsoft.Json;
 using Sharpturbate.Core.Models;
+using Sharpturbate.Ui.Extensions;
 using Sharpturbate.Ui.Models;
+using Sharpturbate.Ui.RegularExpressions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Sharpturbate.Ui.Config
 {
@@ -12,9 +16,9 @@ namespace Sharpturbate.Ui.Config
     {
         public static class Settings
         {
-            private static string LocalDirectory = "local";            
-            private static string CacheDirectory = $"{LocalDirectory}\\cache\\images";
-            private static string LogDirectory = $"{LocalDirectory}\\logs";
+            public static string LocalDirectory = "local";
+            public static string CacheDirectory = $"{LocalDirectory}\\cache\\images";
+            public static string LogDirectory = $"{LocalDirectory}\\logs";
 
             private static string SettingsPath = $"{LocalDirectory}\\settings.json";
 
@@ -47,6 +51,10 @@ namespace Sharpturbate.Ui.Config
                         if (File.Exists(SettingsPath))
                         {
                             string settings = File.ReadAllText(SettingsPath);
+
+                            if (Regex.IsMatch(settings, RegexCollection.Base64))
+                                settings = Encoding.UTF8.GetString(Convert.FromBase64String(settings));
+
                             loadedSettings = JsonConvert.DeserializeObject<T>(settings);
                         }
                         else
@@ -76,9 +84,7 @@ namespace Sharpturbate.Ui.Config
             {
                 get
                 {
-                    return Current.Models.Select(x => File.Exists($"{CacheDirectory}\\{x.StreamName}.png") ? 
-                                                                    new Cam(x, true).ChangeSource($"{CacheDirectory}\\{x.StreamName}.png") : 
-                                                                    new Cam(x, true)).OrderBy(x => x.StreamName);
+                    return Current.Models.WithCache();
                 }
             }
 
@@ -95,13 +101,7 @@ namespace Sharpturbate.Ui.Config
                     if (!Directory.Exists(CacheDirectory))
                         Directory.CreateDirectory(CacheDirectory);
 
-                    string localFile = $"{CacheDirectory}\\{cam.StreamName}.png";
-
-                    if (!File.Exists(localFile))
-                    {
-                        WebClient webClient = new WebClient();
-                        webClient.DownloadFile(cam.ImageSource, localFile);
-                    }
+                    cam.SaveImage(CacheDirectory);
 
                     Current.Models.Add(cam);
                 }
@@ -112,6 +112,9 @@ namespace Sharpturbate.Ui.Config
             private static void Save()
             {
                 string settings = JsonConvert.SerializeObject(Current);
+
+                settings = Convert.ToBase64String(Encoding.UTF8.GetBytes(settings));
+
                 File.WriteAllText(SettingsPath, settings);
             }
         }

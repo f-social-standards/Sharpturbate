@@ -1,9 +1,15 @@
-﻿using NLog;
+﻿using Newtonsoft.Json;
+using NLog;
 
 namespace Sharpturbate.Ui.Logging
 {
     public static class Log
     {
-        public static Logger Instance { get; private set; } = LogManager.GetCurrentClassLogger();
+        private static Logger Instance { get; set; } = LogManager.GetCurrentClassLogger();
+
+        public static void LogEvent(LogLevel level, object message)
+        {
+            Instance.Log(level, JsonConvert.SerializeObject(message));
+        }
     }
 }

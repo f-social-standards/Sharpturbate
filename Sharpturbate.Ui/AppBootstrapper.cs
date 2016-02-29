@@ -1,5 +1,4 @@
 ﻿using Caliburn.Micro;
-using Newtonsoft.Json;
 using NLog;
 using Sharpturbate.Ui.Logging;
 using Sharpturbate.Ui.Models;
@@ -37,7 +36,7 @@ namespace Sharpturbate.Ui
 
         protected override void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            Log.Instance.Log(LogLevel.Error, JsonConvert.SerializeObject(new Error(e.Exception)));
+            Log.LogEvent(LogLevel.Error, new Error(e.Exception));
             e.Handled = true;
         }
     }

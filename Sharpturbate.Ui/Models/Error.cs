@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections;
 
 namespace Sharpturbate.Ui.Models
 {
@@ -12,7 +13,8 @@ namespace Sharpturbate.Ui.Models
         {
             Message = ex?.Message;
             StackTrace = ex?.StackTrace;
-            ex.Source = ex?.Source;
+            Source = ex?.Source;
+            Data = ex?.Data;
 
             if(ex.InnerException != null)
             {
@@ -26,6 +28,8 @@ namespace Sharpturbate.Ui.Models
         public string StackTrace { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Source { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary Data { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Error InnerException { get; set; }
     }

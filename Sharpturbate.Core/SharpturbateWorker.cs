@@ -55,6 +55,7 @@ namespace Sharpturbate.Core
                               stopped = false;
 
         private static readonly int _allowedTimeout = 2;
+        private static readonly int _allowedMaxHours = 4;
         
         private volatile int exceptionCount = 0;
         
@@ -82,6 +83,13 @@ namespace Sharpturbate.Core
                 return Status == StreamStatus.Active;
             }
         }
+        public bool IsNotWorking
+        {
+            get
+            {
+                return !IsWorking;
+            }
+        }
 
         public SharpturbateWorker(ChaturbateModel model)
         {
@@ -96,23 +104,22 @@ namespace Sharpturbate.Core
             Stopwatch timeoutWatch = default(Stopwatch);
             totalStreamTime = Stopwatch.StartNew();
 
-            Task.Run(() => 
+            Task.Run(async () => 
             {
-                
-                    uri = ChaturbateProxy.GetStreamLink(Model);
+                uri = ChaturbateProxy.GetStreamLink(Model);
 
-                    if(uri == null)
-                    {
-                        LogProgress(LogType.Warning, string.Format("{0} is offline, cannot download stream right now.", Model.StreamName));
-                        return;
-                    }
+                if(uri == null)
+                {
+                    LogProgress(LogType.Warning, string.Format("{0} is offline, cannot download stream right now.", Model.StreamName));
+                    return;
+                }
 
                 for (;;)
                 {
                     try
                     {
-                        if (exceptionCount > 200 || totalStreamTime.Elapsed.TotalHours > 4)
-                            Stop();
+                        if (exceptionCount > 200 || totalStreamTime.Elapsed.TotalHours > _allowedMaxHours)
+                            await Stop();
 
                         if (removed || Status == StreamStatus.Idle)
                         {
@@ -158,7 +165,8 @@ namespace Sharpturbate.Core
                             // check if it has timed out for long enough or if the process was stopped
                             if (timeoutWatch.Elapsed.TotalMinutes > _allowedTimeout || stopped)
                             {
-                                string finalOutputPath = string.Format(@"{0}\{1}_recorded_on_{2}_{3}.mp4", outputPath, Model.StreamName, DateTime.Now.ToString("MM_dd_yyyy"), DateTime.Now.Ticks);
+                                string finalClipName = string.Format("{0}_recorded_on_{1}_{2}.mp4", Model.StreamName, DateTime.Now.ToString("MM_dd_yyyy"), DateTime.Now.Ticks);
+                                string finalOutputPath = string.Format(@"{0}\{1}", outputPath, finalClipName);
 
                                 Status = StreamStatus.Joining;
 
@@ -168,6 +176,15 @@ namespace Sharpturbate.Core
 
                                 if (File.Exists(finalOutputPath))
                                 {
+                                    string modelDirectoy = string.Format(@"{0}\{1}", outputPath, Model.StreamName);
+
+                                    if(!Directory.Exists(modelDirectoy))
+                                    {
+                                        Directory.CreateDirectory(modelDirectoy);
+                                    }
+
+                                    File.Move(finalOutputPath, string.Format(@"{0}\{1}", modelDirectoy, finalClipName));
+
                                     Status = StreamStatus.Idle;
                                 }
                                 else

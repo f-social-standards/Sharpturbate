@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Sharpturbate.Ui.Extensions;
 using static Sharpturbate.Ui.Config.UserSettings<Sharpturbate.Core.Models.ChaturbateSettings>;
 
 namespace Sharpturbate.Ui.DataSource
@@ -25,9 +26,23 @@ namespace Sharpturbate.Ui.DataSource
 
         private static int cacheTimeout = 180;
         private static ConcurrentDictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>> Cache { get; set; } = new ConcurrentDictionary<long, CacheEntry<IEnumerable<ChaturbateModel>>>();
+
         private static Func<Rooms, int, Task<IEnumerable<ChaturbateModel>>> getModels = async (Rooms roomType, int pageNumber) =>
         {
-            return roomType == Rooms.Favorites ? await ChaturbateProxy.GetFavorites(Settings.Current) : await ChaturbateProxy.GetStreamsAsync(roomType, pageNumber);
+            IEnumerable<ChaturbateModel> cams = roomType == Rooms.Favorites ? await ChaturbateProxy.GetFavorites(Settings.Current) : await ChaturbateProxy.GetStreamsAsync(roomType, pageNumber);
+
+            if (roomType == Rooms.Favorites)
+            {
+                foreach(var cam in cams)
+                {
+                    if(cam.IsOnline)
+                    {
+                        new Cam(cam, true).SaveImage(Settings.CacheDirectory);
+                    }
+                }
+            }
+
+            return cams;
         };
 
         static ChaturbateCache()
@@ -77,7 +92,7 @@ namespace Sharpturbate.Ui.DataSource
                 }
             }
 
-            return Cache[key].Value.Select(x => new Cam(x, Settings.Favorites.Any(model => model.StreamName == x.StreamName)));
+            return Cache[key].Value.WithCache().Select(x => new Cam(x, Settings.Favorites.Any(model => model.StreamName == x.StreamName)));
         }
     }
 }

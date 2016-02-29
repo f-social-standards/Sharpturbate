@@ -1,7 +1,10 @@
-﻿using Sharpturbate.Core.Enums;
+﻿using NLog;
+using Sharpturbate.Core.Enums;
 using Sharpturbate.Core.Models;
+using Sharpturbate.Ui.Logging;
 using System;
 using System.IO;
+using System.Net;
 
 namespace Sharpturbate.Ui.Models
 {
@@ -14,6 +17,13 @@ namespace Sharpturbate.Ui.Models
             get
             {
                 return !IsDownloading;
+            }
+        }
+        public bool IsDownloadable
+        {
+            get
+            {
+                return IsOnline && IsNotDownloading;
             }
         }
 
@@ -40,6 +50,24 @@ namespace Sharpturbate.Ui.Models
         {
             ImageSource = new Uri(new FileInfo(filePath).FullName);
             return this;
+        }
+
+        public void SaveImage(string cacheLocation)
+        {
+            try
+            {
+                string localFile = $"{cacheLocation}\\{StreamName}.png";
+
+                if (!File.Exists(localFile))
+                {
+                    WebClient webClient = new WebClient();
+                    webClient.DownloadFileAsync(ImageSource, localFile);
+                }
+            }
+            catch(Exception e)
+            {
+                Log.LogEvent(LogLevel.Error, new Error(e));
+            }
         }
     }
 }

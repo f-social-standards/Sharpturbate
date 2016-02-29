@@ -180,11 +180,11 @@
                                         <StackPanel x:Name="CamName" Grid.Row="1" Margin="8 24 8 0" >
                                             <TextBlock Text="{Binding StreamName}" FontWeight="Bold" ></TextBlock>
                                         </StackPanel>
-                                        <StackPanel HorizontalAlignment="Right" Grid.Row="2" Orientation="Horizontal" Margin="8" Visibility="{Binding IsOnline, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel HorizontalAlignment="Right" Grid.Row="2" Orientation="Horizontal" Margin="8">
                                             <ToggleButton x:Name="CamDownload" Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
                                                       cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                                       cal:Message.Attach="[Event Click] = [Action DownloadCam($dataContext)]"
-                                                      Visibility="{Binding IsNotDownloading, Converter={StaticResource BoolToVisibility}}"
+                                                      Visibility="{Binding IsDownloadable, Converter={StaticResource BoolToVisibility}}"
                                                       Margin="8 0 0 0" 
                                                       IsChecked="False">
                                                 <materialDesign:PackIcon Kind="Download" Height="21" Width="21" />
@@ -266,6 +266,13 @@
                                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}" Width="30" Height="30"
                                                     cal:Message.Attach="[Event Click] = [Action ShowLog($dataContext)]">
                                                     <materialDesign:PackIcon Kind="MessageTextOutline" Height="20" Width="20" />
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Margin="0 0 8 0" 
+                                                    ToolTip="Remove from list"           
+                                                    Visibility="{Binding IsNotWorking, Converter={StaticResource BoolToVisibility}}"
+                                                    cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}" Width="30" Height="30"
+                                                    cal:Message.Attach="[Event Click] = [Action ShowLog($dataContext)]">
+                                                    <materialDesign:PackIcon Kind="WindowClose" Height="20" Width="20" />
                                                 </Button>
                                                 <Button Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Margin="0 0 8 0" 
                                                     ToolTip="Stop download and join video parts"
