@@ -8,6 +8,7 @@
         xmlns:il="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         xmlns:cal="http://www.caliburnproject.org"
@@ -28,6 +29,11 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Slider.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+            <CollectionViewSource Source="{Binding FavoriteModels}" x:Key="SortedFavorites">
+                <CollectionViewSource.SortDescriptions>
+                    <scm:SortDescription PropertyName="StreamName" Direction="Ascending" />
+                </CollectionViewSource.SortDescriptions>
+            </CollectionViewSource>
         </ResourceDictionary>        
     </Window.Resources>    
     <Grid Width="Auto" Height="Auto">
@@ -86,7 +92,7 @@
                         <RowDefinition />
                     </Grid.RowDefinitions>
                     <TextBlock>Schedule download:</TextBlock>
-                    <ComboBox Grid.Row="1" Grid.Column="3" materialDesign:TextFieldAssist.Hint="Cam Girl" ItemsSource="{Binding FavoriteModels}" SelectedItem="{Binding ScheduledModel}" Margin="0,-30,0,0">
+                    <ComboBox Grid.Row="1" Grid.Column="3" materialDesign:TextFieldAssist.Hint="Cam Girl" ItemsSource="{Binding Source={StaticResource SortedFavorites}}" SelectedItem="{Binding ScheduledModel}" Margin="0,-30,0,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -229,8 +235,7 @@
                                   HorizontalAlignment="Right" Margin="16"
                                   IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}" />
                     <ScrollViewer x:Name="DownloadQueue" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto" Margin="0,70,0,0">
-                        <ItemsControl Grid.Column="2" 
-                                  xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+                        <ItemsControl Grid.Column="2"                                   
                                   Grid.IsSharedSizeScope="True">
                             <ItemsControl.Resources>
                                 <CollectionViewSource x:Key="Downloads" Source="{Binding DownloadQueue}">
