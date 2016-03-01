@@ -14,7 +14,7 @@ namespace Sharpturbate.Ui.Extensions
             string cache = UserSettings<ChaturbateSettings>.Settings.CacheDirectory;
             return camList.Select(x => File.Exists($"{cache}\\{x.StreamName}.png") ?
                                     new Cam(x, true).ChangeSource($"{cache}\\{x.StreamName}.png") :
-                                    new Cam(x, true)).OrderBy(x => x.StreamName);
+                                    new Cam(x, true));
         }
     }
 }

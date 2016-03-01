@@ -84,7 +84,7 @@ namespace Sharpturbate.Ui.Config
             {
                 get
                 {
-                    return Current.Models.WithCache();
+                    return Current.Models.WithCache().OrderBy(x => x.StreamName);
                 }
             }
 

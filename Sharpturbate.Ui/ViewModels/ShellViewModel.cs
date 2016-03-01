@@ -26,7 +26,6 @@ namespace Sharpturbate.Ui.ViewModels
             TaskbarVisibility = Visibility.Hidden;
             DisplayName = AppSettings.AppName;
             DownloadLocation = Settings.DownloadLocation;
-            Interval = 15;
             LoadModels();
         }
 
