@@ -277,7 +277,7 @@
                                                     ToolTip="Remove from list"           
                                                     Visibility="{Binding IsNotWorking, Converter={StaticResource BoolToVisibility}}"
                                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}" Width="30" Height="30"
-                                                    cal:Message.Attach="[Event Click] = [Action ShowLog($dataContext)]">
+                                                    cal:Message.Attach="[Event Click] = [Action Remove($dataContext)]">
                                                     <materialDesign:PackIcon Kind="WindowClose" Height="20" Width="20" />
                                                 </Button>
                                                 <Button Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Margin="0 0 8 0" 

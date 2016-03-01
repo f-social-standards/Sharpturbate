@@ -333,6 +333,12 @@ namespace Sharpturbate.Ui.ViewModels
             DownloadQueue.Add(worker);
         }
 
+        public void Remove(SharpturbateWorker worker)
+        {
+            DownloadQueue.Remove(worker);
+            DownloadQueue.Refresh();
+        }
+
         public async void Stop(SharpturbateWorker worker)
         {
             if (await worker.Stop())
