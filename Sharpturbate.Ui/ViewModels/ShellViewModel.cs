@@ -54,7 +54,15 @@ namespace Sharpturbate.Ui.ViewModels
                 return DownloadQueue.Count(x => x.Status == StreamStatus.Idle);
             }
         }
-        
+
+        public int ScheduledDownloads
+        {
+            get
+            {
+                return ScheduleQueue.Count;
+            }
+        }
+
         public int Interval { get; set; }
 
         private Cam scheduledModel { get; set; }
@@ -244,6 +252,9 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void ScheduleDownload()
         {
+            ScheduleQueue.Add(ScheduledModel);
+            NotifyOfPropertyChange(() => ScheduledDownloads);
+
             var schedule = Task.Run(() => {
                 Uri streamUri = default(Uri);
                 var scheduledCam = ScheduledModel;
@@ -256,6 +267,8 @@ namespace Sharpturbate.Ui.ViewModels
                     Thread.Sleep(timeoutMiliseconds);
                 }
 
+                ScheduleQueue.Remove(scheduledCam);
+                NotifyOfPropertyChange(() => ScheduledDownloads);
                 DownloadCam(scheduledCam);
             });
         }

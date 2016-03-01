@@ -49,6 +49,7 @@
                 <ContextMenu Width="Auto" Height="Auto">
                     <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14" Text="{Binding ActiveDownloads, StringFormat='Active downloads: {0}'}"></TextBlock>
                     <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14" Text="{Binding FinishedDownloads, StringFormat='Finished downloads: {0}'}"></TextBlock>
+                    <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14" Text="{Binding ScheduledDownloads, StringFormat='Scheduled downloads: {0}'}"></TextBlock>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
