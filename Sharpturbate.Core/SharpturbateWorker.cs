@@ -1,5 +1,6 @@
 ﻿using FFMpegSharp;
 using FFMpegSharp.FFMPEG;
+using FFMpegSharp.FFMPEG.Exceptions;
 using Sharpturbate.Core.Browser;
 using Sharpturbate.Core.Enums;
 using Sharpturbate.Core.Extensions;
@@ -57,7 +58,7 @@ namespace Sharpturbate.Core
         private static readonly int _allowedTimeout = 2;
         private static readonly int _allowedMaxHours = 4;
         
-        private volatile int exceptionCount = 0;
+        private volatile int urlNotFoundCount = 0;
         
         private void LogProgress(LogType type, string message)
         {
@@ -108,17 +109,17 @@ namespace Sharpturbate.Core
             {
                 uri = ChaturbateProxy.GetStreamLink(Model);
 
-                if(uri == null)
-                {
-                    LogProgress(LogType.Warning, string.Format("{0} is offline, cannot download stream right now.", Model.StreamName));
-                    return;
-                }
-
                 for (;;)
                 {
                     try
                     {
-                        if (exceptionCount > 200 || totalStreamTime.Elapsed.TotalHours > _allowedMaxHours)
+                        if (uri == null)
+                        {
+                            LogProgress(LogType.Warning, string.Format("{0} is offline, cannot download stream right now.", Model.StreamName));
+                            return;
+                        }
+
+                        if (urlNotFoundCount > 200 || totalStreamTime.Elapsed.TotalHours > _allowedMaxHours)
                             await Stop();
 
                         if (removed || Status == StreamStatus.Idle)
@@ -145,12 +146,24 @@ namespace Sharpturbate.Core
 
                             // download the stream
                             string downloadPath = string.Format(@"{0}\{1}_part_{2}.mp4", outputPath, Model.StreamName, ActivePart++);
-                            ffmpeg.SaveM3U8Stream(uri, new FileInfo(downloadPath));
+                            try
+                            {
+                                ffmpeg.SaveM3U8Stream(uri, new FileInfo(downloadPath));
 
-                            // check if the file exists after the recording is finished
-                            if (File.Exists(downloadPath))
-                                clipParts.Add(downloadPath);
-                            else ActivePart--;
+                                // check if the file exists after the recording is finished
+                                if (File.Exists(downloadPath))
+                                    clipParts.Add(downloadPath);
+                                else ActivePart--;
+                            }
+                            catch (FFMpegException fe)
+                            {
+                                if (fe.Message.ToLower().Contains("404 not found"))
+                                {
+                                    uri = ChaturbateProxy.GetStreamLink(Model);
+                                    urlNotFoundCount++;
+                                    ActivePart--;
+                                }
+                            }
                         }
                         else
                         {
@@ -195,11 +208,10 @@ namespace Sharpturbate.Core
                                 }
                             }
                         }
-                    }
+                    }                   
                     catch (Exception e)
                     {
                         LogProgress(LogType.Error, string.Format("Something happened while downloading the stream. Info: {0}", e.Message));
-                        exceptionCount++;
                     }
                 }
             });
