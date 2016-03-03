@@ -204,6 +204,10 @@
       <Project>{b66d691f-96b7-4bd6-9ff0-337285af50d1}</Project>
       <Name>Sharpturbate.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\telemetry-js\Telemetry.Net\Telemetry.Net.csproj">
+      <Project>{72ac14ab-f672-425d-883d-00b2a5b73f17}</Project>
+      <Name>Telemetry.Net</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6">

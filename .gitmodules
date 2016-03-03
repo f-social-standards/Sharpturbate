@@ -1,3 +1,6 @@
 [submodule "FFMpegSharp"]
 	path = FFMpegSharp
 	url = https://github.com/vladjerca/FFMpegSharp.git
+[submodule "telemetry-js"]
+	path = telemetry-js
+	url = https://github.com/vladjerca/telemetry-js.git

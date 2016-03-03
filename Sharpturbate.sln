@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharpturbate.Ui", "Sharptur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFMpegSharp", "FFMpegSharp\FFMpegSharp\FFMpegSharp.csproj", "{5CEC6504-BD25-45D0-830C-A2162F4AAD12}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Telemetry.Net", "telemetry-js\Telemetry.Net\Telemetry.Net.csproj", "{72AC14AB-F672-425D-883D-00B2A5B73F17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{5CEC6504-BD25-45D0-830C-A2162F4AAD12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CEC6504-BD25-45D0-830C-A2162F4AAD12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CEC6504-BD25-45D0-830C-A2162F4AAD12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72AC14AB-F672-425D-883D-00B2A5B73F17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72AC14AB-F672-425D-883D-00B2A5B73F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72AC14AB-F672-425D-883D-00B2A5B73F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72AC14AB-F672-425D-883D-00B2A5B73F17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
