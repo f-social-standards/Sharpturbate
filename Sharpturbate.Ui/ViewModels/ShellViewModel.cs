@@ -1,4 +1,11 @@
-﻿using Caliburn.Micro;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using Caliburn.Micro;
 using NLog;
 using Sharpturbate.Core;
 using Sharpturbate.Core.Browser;
@@ -8,19 +15,27 @@ using Sharpturbate.Ui.DataSource;
 using Sharpturbate.Ui.Logging;
 using Sharpturbate.Ui.Models;
 using Sharpturbate.Ui.RegularExpressions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
 using static Sharpturbate.Ui.Config.UserSettings<Sharpturbate.Core.Models.ChaturbateSettings>;
 
 namespace Sharpturbate.Ui.ViewModels
 {
     public sealed class ShellViewModel : Conductor<IScreen>
     {
+        #region Private Members
+        private int _currentPage = 1;
+        private string _downloadLocation;
+        private string _message;
+        private bool _showMessageDialog;
+        private bool _showSchedulerDialog;
+        private bool _showSettingsDialog;
+        private string _streamUrl;
+        private Visibility _taskbarVisibility;
+        private WindowState _windowState;
+        private Visibility _windowVisibility;
+        private Visibility _isLoaderVisible;
+        private Cam _scheduledModel { get; set; }
+        #endregion
+
         public ShellViewModel()
         {
             TaskbarVisibility = Visibility.Hidden;
@@ -35,201 +50,147 @@ namespace Sharpturbate.Ui.ViewModels
 
         public BindableCollection<Cam> CamModels { get; set; } = new BindableCollection<Cam>();
 
-        public BindableCollection<SharpturbateWorker> DownloadQueue { get; set; } = new BindableCollection<SharpturbateWorker>();
+        public BindableCollection<SharpturbateWorker> DownloadQueue { get; set; } =
+            new BindableCollection<SharpturbateWorker>();
 
         public BindableCollection<Cam> ScheduleQueue { get; set; } = new BindableCollection<Cam>();
 
         public int ActiveDownloads
         {
-            get
-            {
-                return DownloadQueue.Count(x => x.Status == StreamStatus.Active);
-            }
+            get { return DownloadQueue.Count(x => x.Status == StreamStatus.Active); }
         }
 
         public int FinishedDownloads
         {
-            get
-            {
-                return DownloadQueue.Count(x => x.Status == StreamStatus.Idle);
-            }
+            get { return DownloadQueue.Count(x => x.Status == StreamStatus.Idle); }
         }
 
-        public int ScheduledDownloads
-        {
-            get
-            {
-                return ScheduleQueue.Count;
-            }
-        }
+        public int ScheduledDownloads => ScheduleQueue.Count;
 
         public int Interval { get; set; }
-
-        private Cam scheduledModel { get; set; }
+        
         public Cam ScheduledModel
         {
-            get
-            {
-                return scheduledModel;
-            }
+            get { return _scheduledModel; }
             set
             {
-                scheduledModel = value;
+                _scheduledModel = value;
                 NotifyOfPropertyChange(() => ScheduledModel);
             }
         }
 
-        private string downloadLocation;
         public string DownloadLocation
         {
-            get
-            {
-                return downloadLocation;
-            }
+            get { return _downloadLocation; }
             set
             {
-                downloadLocation = value;
+                _downloadLocation = value;
                 NotifyOfPropertyChange(() => DownloadLocation);
             }
         }
 
-        private Visibility isLoaderVisible;
         public Visibility IsLoaderVisible
         {
-            get { return isLoaderVisible; }
+            get { return _isLoaderVisible; }
             set
             {
-                isLoaderVisible = value;
+                _isLoaderVisible = value;
                 NotifyOfPropertyChange(() => IsLoaderVisible);
             }
         }
 
-        private bool showSettingsDialog;
         public bool ShowSettingsDialog
         {
-            get { return showSettingsDialog; }
+            get { return _showSettingsDialog; }
             set
             {
-                showSettingsDialog = value;
+                _showSettingsDialog = value;
                 NotifyOfPropertyChange(() => ShowSettingsDialog);
             }
         }
 
-        private bool showSchedulerDialog;
         public bool ShowSchedulerDialog
         {
-            get { return showSchedulerDialog; }
+            get { return _showSchedulerDialog; }
             set
             {
-                showSchedulerDialog = value;
+                _showSchedulerDialog = value;
                 NotifyOfPropertyChange(() => ShowSchedulerDialog);
             }
         }
 
-        public bool IsPaged
-        {
-            get
-            {
-                return ChaturbateCache.CurrentRoom != Rooms.Favorites;
-            }
-        }
+        public bool IsPaged => ChaturbateCache.CurrentRoom != Rooms.Favorites;
 
-        private int currentPage = 1;
         public int CurrentPage
         {
-            get
-            {
-                return currentPage;
-            }
+            get { return _currentPage; }
             private set
             {
-                currentPage = value;
+                _currentPage = value;
                 NotifyOfPropertyChange(() => CurrentPage);
             }
         }
 
-        private string streamUrl;
-        public string StreamURL
+        public string StreamUrl
         {
-            get
-            {
-                return streamUrl;
-            }
+            get { return _streamUrl; }
             set
             {
-                streamUrl = value;
-                NotifyOfPropertyChange(() => StreamURL);
+                _streamUrl = value;
+                NotifyOfPropertyChange(() => StreamUrl);
             }
         }
 
-        public WindowState windowState;
         public WindowState WindowState
         {
-            get
-            {
-                return windowState;
-            }
+            get { return _windowState; }
             set
             {
-                windowState = value;
+                _windowState = value;
                 NotifyOfPropertyChange(() => WindowState);
             }
         }
 
-        public Visibility windowVisibility;
         public Visibility WindowVisibility
         {
-            get
-            {
-                return windowVisibility;
-            }
+            get { return _windowVisibility; }
             set
             {
-                windowVisibility = value;
+                _windowVisibility = value;
                 NotifyOfPropertyChange(() => WindowVisibility);
             }
         }
 
-        public Visibility taskbarVisibility;
         public Visibility TaskbarVisibility
         {
-            get
-            {
-                return taskbarVisibility;
-            }
+            get { return _taskbarVisibility; }
             set
             {
-                taskbarVisibility = value;
+                _taskbarVisibility = value;
                 NotifyOfPropertyChange(() => TaskbarVisibility);
             }
         }
 
-        private string message;
         public string Message
         {
-            get
-            {
-                return message;
-            }
+            get { return _message; }
             set
             {
-                message = value;
+                _message = value;
                 NotifyOfPropertyChange(() => Message);
             }
         }
-        public bool showMessageDialog;
+
         public bool ShowMessageDialog
         {
-            get
-            {
-                return showMessageDialog;
-            }
+            get { return _showMessageDialog; }
             set
             {
-                showMessageDialog = value;
+                _showMessageDialog = value;
                 NotifyOfPropertyChange(() => ShowMessageDialog);
             }
         }
+
         public void ShowMessage(string message)
         {
             Message = message;
@@ -237,7 +198,7 @@ namespace Sharpturbate.Ui.ViewModels
         }
 
         public void ShowLog(SharpturbateWorker model)
-        {            
+        {
             var logLines = Regex.Split(model.Log, RegexCollection.NewLine).ToList();
 
             if (logLines.Count > 10)
@@ -255,14 +216,15 @@ namespace Sharpturbate.Ui.ViewModels
             ScheduleQueue.Add(ScheduledModel);
             NotifyOfPropertyChange(() => ScheduledDownloads);
 
-            var schedule = Task.Run(() => {
-                Uri streamUri = default(Uri);
+            var schedule = Task.Run(() =>
+            {
+                var streamUri = default(Uri);
                 var scheduledCam = ScheduledModel;
                 var rng = new Random(Environment.TickCount);
 
                 while (streamUri == null)
                 {
-                    int timeoutMiliseconds = (Interval + rng.Next(-5, 5)) * 1000;
+                    var timeoutMiliseconds = (Interval + rng.Next(-5, 5))*1000;
                     streamUri = ChaturbateProxy.GetStreamLink(scheduledCam);
                     Thread.Sleep(timeoutMiliseconds);
                 }
@@ -275,17 +237,17 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void DownloadCam()
         {
-            var match = Regex.Match(StreamURL, RegexCollection.ChaturbateUrl);
+            var match = Regex.Match(StreamUrl, RegexCollection.ChaturbateUrl);
 
             if (match.Success)
             {
-                if (StreamURL.EndsWith("/"))
+                if (StreamUrl.EndsWith("/"))
                 {
-                    StreamURL = StreamURL.Substring(0, StreamURL.Length - 1);
+                    StreamUrl = StreamUrl.Substring(0, StreamUrl.Length - 1);
                 }
-                var streamName = StreamURL.Split('/').Last();
+                var streamName = StreamUrl.Split('/').Last();
 
-                Cam model = new Cam(streamName);
+                var model = new Cam(streamName);
 
                 DownloadCam(model);
             }
@@ -297,7 +259,8 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void DownloadCam(Cam cam)
         {
-            if(DownloadQueue.Any(x => x.Model.StreamName == cam.StreamName) || ScheduleQueue.Any(x => x.StreamName == cam.StreamName))
+            if (DownloadQueue.Any(x => x.Model.StreamName == cam.StreamName) ||
+                ScheduleQueue.Any(x => x.StreamName == cam.StreamName))
             {
                 ShowMessage("The stream you are trying to download is already in the schedule or download queue.");
                 return;
@@ -306,21 +269,24 @@ namespace Sharpturbate.Ui.ViewModels
             cam.IsDownloading = true;
             CamModels.Refresh();
 
-            SharpturbateWorker worker = new SharpturbateWorker(cam);
-           
-            worker.OnEvent += (LogType type, string message) => {
+            var worker = new SharpturbateWorker(cam);
 
-                LogLevel level = default(LogLevel);
+            worker.OnEvent += (LogType type, string message) =>
+            {
+                var level = default(LogLevel);
 
-                switch(type)
+                switch (type)
                 {
                     case LogType.Success:
                     case LogType.Update:
-                        level = LogLevel.Info; break;
+                        level = LogLevel.Info;
+                        break;
                     case LogType.Error:
-                        level = LogLevel.Error; break;
+                        level = LogLevel.Error;
+                        break;
                     case LogType.Warning:
-                        level = LogLevel.Warn; break;
+                        level = LogLevel.Warn;
+                        break;
                 }
 
                 DownloadQueue.Refresh();
@@ -329,7 +295,7 @@ namespace Sharpturbate.Ui.ViewModels
                 Log.LogEvent(level, message);
             };
 
-            worker.Start(DownloadLocation);            
+            worker.Start(DownloadLocation);
             DownloadQueue.Add(worker);
         }
 
@@ -348,7 +314,8 @@ namespace Sharpturbate.Ui.ViewModels
             }
             else
             {
-                ShowMessage("It's been some time now... the worker won't stop downloading. It must be 'hard' for him too, if you know what I mean.");
+                ShowMessage(
+                    "It's been some time now... the worker won't stop downloading. It must be 'hard' for him too, if you know what I mean.");
                 Log.LogEvent(LogLevel.Warn, "Worker did not stop in a timely manner.");
             }
         }
@@ -374,7 +341,7 @@ namespace Sharpturbate.Ui.ViewModels
         }
 
         public void ChangePage(int increment)
-        { 
+        {
             CurrentPage += increment;
 
             if (CurrentPage < 1)
@@ -385,8 +352,8 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void SaveSettings()
         {
-            if(!string.IsNullOrWhiteSpace(DownloadLocation))
-                Config.UserSettings<Core.Models.ChaturbateSettings>.Settings.DownloadLocation = DownloadLocation;
+            if (!string.IsNullOrWhiteSpace(DownloadLocation))
+                Settings.DownloadLocation = DownloadLocation;
         }
 
         public void OpenSettings()
@@ -397,9 +364,9 @@ namespace Sharpturbate.Ui.ViewModels
         public void OpenScheduler()
         {
             FavoriteModels.Clear();
-            FavoriteModels.AddRange(Settings.Favorites.Where(x => 
-                                                            !DownloadQueue.Any(q => q.Model.StreamName == x.StreamName) && 
-                                                            !ScheduleQueue.Any(sq => sq.StreamName == x.StreamName)));            
+            FavoriteModels.AddRange(Settings.Favorites.Where(x =>
+                DownloadQueue.All(q => q.Model.StreamName != x.StreamName) &&
+                ScheduleQueue.All(sq => sq.StreamName != x.StreamName)));
             ShowSchedulerDialog = true;
         }
 
@@ -410,11 +377,10 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void OnStateChanged()
         {
-            if (WindowState == WindowState.Minimized)
-            {
-                WindowVisibility = Visibility.Hidden;
-                TaskbarVisibility = Visibility.Visible;
-            }
+            if (WindowState != WindowState.Minimized) return;
+
+            WindowVisibility = Visibility.Hidden;
+            TaskbarVisibility = Visibility.Visible;
         }
 
         public void ShowWindow()
@@ -428,7 +394,8 @@ namespace Sharpturbate.Ui.ViewModels
         {
             CamModels.Clear();
             IsLoaderVisible = Visibility.Visible;
-            CamModels.AddRange((await ChaturbateCache.Get(type, page)).Select(x => {
+            CamModels.AddRange((await ChaturbateCache.Get(type, page)).Select(x =>
+            {
                 x.IsDownloading = DownloadQueue.Any(q => q.Model.StreamName == x.StreamName);
                 return x;
             }));
@@ -441,12 +408,9 @@ namespace Sharpturbate.Ui.ViewModels
         {
             WindowVisibility = Visibility.Hidden;
 
-            foreach (var worker in DownloadQueue)
+            foreach (var worker in DownloadQueue.Where(worker => worker.IsWorking))
             {
-                if (worker.IsWorking)
-                {
-                    await worker.Stop();
-                }
+                await worker.Stop();
             }
 
             callback(true);

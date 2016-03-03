@@ -1,32 +1,15 @@
-﻿using NLog;
+﻿using System;
+using System.IO;
+using System.Net;
+using NLog;
 using Sharpturbate.Core.Enums;
 using Sharpturbate.Core.Models;
 using Sharpturbate.Ui.Logging;
-using System;
-using System.IO;
-using System.Net;
 
 namespace Sharpturbate.Ui.Models
 {
     public class Cam : ChaturbateModel
     {
-        public bool IsFavorite { get; set; }
-        public bool IsDownloading { get; set; }
-        public bool IsNotDownloading
-        {
-            get
-            {
-                return !IsDownloading;
-            }
-        }
-        public bool IsDownloadable
-        {
-            get
-            {
-                return IsOnline && IsNotDownloading;
-            }
-        }
-
         public Cam(ChaturbateModel model, bool isFavorite = false)
         {
             ImageSource = model.ImageSource;
@@ -46,6 +29,13 @@ namespace Sharpturbate.Ui.Models
             Room = Rooms.Featured;
         }
 
+        public bool IsFavorite { get; set; }
+        public bool IsDownloading { get; set; }
+
+        public bool IsNotDownloading => !IsDownloading;
+
+        public bool IsDownloadable => IsOnline && IsNotDownloading;
+
         public Cam ChangeSource(string filePath)
         {
             ImageSource = new Uri(new FileInfo(filePath).FullName);
@@ -58,13 +48,12 @@ namespace Sharpturbate.Ui.Models
             {
                 string localFile = $"{cacheLocation}\\{StreamName}.png";
 
-                if (!File.Exists(localFile))
-                {
-                    WebClient webClient = new WebClient();
-                    webClient.DownloadFileAsync(ImageSource, localFile);
-                }
+                if (File.Exists(localFile)) return;
+
+                var webClient = new WebClient();
+                webClient.DownloadFileAsync(ImageSource, localFile);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Log.LogEvent(LogLevel.Error, new Error(e));
             }

@@ -1,13 +1,15 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
+using Newtonsoft.Json;
 
 namespace Sharpturbate.Ui.Models
 {
     [Serializable]
     public class Error
     {
-        public Error() { }
+        public Error()
+        {
+        }
 
         public Error(Exception ex)
         {
@@ -16,7 +18,7 @@ namespace Sharpturbate.Ui.Models
             Source = ex?.Source;
             Data = ex?.Data;
 
-            if(ex.InnerException != null)
+            if (ex?.InnerException != null)
             {
                 InnerException = new Error(ex.InnerException);
             }
@@ -24,12 +26,16 @@ namespace Sharpturbate.Ui.Models
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Message { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string StackTrace { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Source { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary Data { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Error InnerException { get; set; }
     }

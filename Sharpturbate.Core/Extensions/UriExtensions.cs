@@ -12,7 +12,7 @@ namespace Sharpturbate.Core.Extensions
                 var request = WebRequest.Create(url);
                 request.Method = "HEAD";
 
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var response = (HttpWebResponse) request.GetResponse())
                 {
                     return response.StatusCode == HttpStatusCode.OK && response.ContentLength > 0;
                 }

@@ -16,6 +16,6 @@ namespace Sharpturbate.Core.Enums
 
     public static class ChaturbateRooms
     {
-        public static IEnumerable<Rooms> Categories { get { return Enum.GetValues(typeof(Rooms)).Cast<Rooms>(); } }
+        public static IEnumerable<Rooms> Categories => Enum.GetValues(typeof (Rooms)).Cast<Rooms>();
     }
 }

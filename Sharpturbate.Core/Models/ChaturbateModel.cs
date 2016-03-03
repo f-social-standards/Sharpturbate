@@ -1,5 +1,5 @@
-﻿using Sharpturbate.Core.Enums;
-using System;
+﻿using System;
+using Sharpturbate.Core.Enums;
 
 namespace Sharpturbate.Core.Models
 {

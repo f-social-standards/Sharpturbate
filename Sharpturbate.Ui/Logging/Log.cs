@@ -5,7 +5,7 @@ namespace Sharpturbate.Ui.Logging
 {
     public static class Log
     {
-        private static Logger Instance { get; set; } = LogManager.GetCurrentClassLogger();
+        private static Logger Instance { get; } = LogManager.GetCurrentClassLogger();
 
         public static void LogEvent(LogLevel level, object message)
         {
