@@ -6,5 +6,6 @@ namespace Sharpturbate.Core.Models
     {
         public string DefaultPath = string.Empty;
         public List<ChaturbateModel> Models = new List<ChaturbateModel>();
+        public bool MoveToFolder { get; set; }
     }
 }

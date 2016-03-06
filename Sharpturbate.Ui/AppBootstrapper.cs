@@ -6,8 +6,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Caliburn.Micro;
 using NLog;
+using Sharpturbate.Core.Telemetry.Models;
 using Sharpturbate.Ui.Logging;
-using Sharpturbate.Ui.Models;
 using Sharpturbate.Ui.Properties;
 using Sharpturbate.Ui.ViewModels;
 

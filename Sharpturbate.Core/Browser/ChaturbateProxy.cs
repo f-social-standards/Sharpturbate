@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Parser.Html;
+using Sharpturbate.Core.Aspects;
 using Sharpturbate.Core.Enums;
 using Sharpturbate.Core.Models;
 
@@ -56,15 +57,18 @@ namespace Sharpturbate.Core.Browser
             }
             catch
             {
-                return null;
+                return default(Uri);
             }
         }
 
+        [LogData]
         public static async Task<IEnumerable<ChaturbateModel>> GetStreamsAsync(Rooms room = Rooms.Featured, int page = 1)
         {
             var roomUrl = string.Empty;
 
-            roomUrl = room != Rooms.Featured ? $"{_baseUrl}/{room.ToString().ToLower()}-cams/?page={page}" : $"{_baseUrl}/?page={page}";
+            roomUrl = room != Rooms.Featured
+                ? $"{_baseUrl}/{room.ToString().ToLower()}-cams/?page={page}"
+                : $"{_baseUrl}/?page={page}";
 
             var request = WebRequest.Create(roomUrl);
             using (var response = await request.GetResponseAsync())

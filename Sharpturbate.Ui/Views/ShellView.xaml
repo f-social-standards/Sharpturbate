@@ -163,13 +163,18 @@
                         <RowDefinition />
                         <RowDefinition />
                         <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
                     </Grid.RowDefinitions>
                     <TextBlock>Settings:</TextBlock>
                     <TextBox wpf:TextFieldAssist.Hint="Download Location"
                              Style="{DynamicResource MaterialDesignFloatingHintTextBox}"
                              Margin="0 6 0 0"
                              FontSize="18" Grid.Row="1" Text="{Binding DownloadLocation, Mode=TwoWay}" />
-                    <StackPanel Orientation="Horizontal" Grid.Row="3"
+                    <CheckBox Grid.Row="3" Style="{StaticResource MaterialDesignCheckBox}" Margin="0,5,8,8" VerticalAlignment="Center" IsChecked="{Binding MoveToFolder, Mode=TwoWay}">
+                        Postprocess downloads (separate each model in a folder)
+                    </CheckBox>
+                    <StackPanel Orientation="Horizontal" Grid.Row="4"
                                 Margin="0 16 0 0">
                         <Button IsDefault="True" Style="{DynamicResource MaterialDesignFlatButton}"
                                 Command="materialDesign:DialogHost.CloseDialogCommand"

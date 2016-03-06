@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections;
-using Newtonsoft.Json;
+using Telemetry.Net.Interfaces;
 
-namespace Sharpturbate.Ui.Models
+namespace Sharpturbate.Core.Telemetry.Models
 {
     [Serializable]
-    public class Error
+    public class Error : IEventData
     {
-        public Error()
-        {
-        }
-
         public Error(Exception ex)
         {
             Message = ex?.Message;
@@ -24,19 +20,10 @@ namespace Sharpturbate.Ui.Models
             }
         }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Message { get; set; }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string StackTrace { get; set; }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Source { get; set; }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary Data { get; set; }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Error InnerException { get; set; }
     }
 }

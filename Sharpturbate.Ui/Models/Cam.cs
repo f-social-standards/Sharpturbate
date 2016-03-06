@@ -4,6 +4,7 @@ using System.Net;
 using NLog;
 using Sharpturbate.Core.Enums;
 using Sharpturbate.Core.Models;
+using Sharpturbate.Core.Telemetry.Models;
 using Sharpturbate.Ui.Logging;
 
 namespace Sharpturbate.Ui.Models

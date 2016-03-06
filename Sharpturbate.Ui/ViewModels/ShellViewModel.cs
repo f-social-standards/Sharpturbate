@@ -21,26 +21,12 @@ namespace Sharpturbate.Ui.ViewModels
 {
     public sealed class ShellViewModel : Conductor<IScreen>
     {
-        #region Private Members
-        private int _currentPage = 1;
-        private string _downloadLocation;
-        private string _message;
-        private bool _showMessageDialog;
-        private bool _showSchedulerDialog;
-        private bool _showSettingsDialog;
-        private string _streamUrl;
-        private Visibility _taskbarVisibility;
-        private WindowState _windowState;
-        private Visibility _windowVisibility;
-        private Visibility _isLoaderVisible;
-        private Cam _scheduledModel { get; set; }
-        #endregion
-
         public ShellViewModel()
         {
             TaskbarVisibility = Visibility.Hidden;
             DisplayName = AppSettings.AppName;
             DownloadLocation = Settings.DownloadLocation;
+            MoveToFolder = Settings.MoveToFolder;
             LoadModels();
         }
 
@@ -68,7 +54,7 @@ namespace Sharpturbate.Ui.ViewModels
         public int ScheduledDownloads => ScheduleQueue.Count;
 
         public int Interval { get; set; }
-        
+
         public Cam ScheduledModel
         {
             get { return _scheduledModel; }
@@ -86,6 +72,16 @@ namespace Sharpturbate.Ui.ViewModels
             {
                 _downloadLocation = value;
                 NotifyOfPropertyChange(() => DownloadLocation);
+            }
+        }
+
+        public bool MoveToFolder
+        {
+            get { return _moveToFolder; }
+            set
+            {
+                _moveToFolder = value;
+                NotifyOfPropertyChange(() => MoveToFolder);
             }
         }
 
@@ -295,7 +291,7 @@ namespace Sharpturbate.Ui.ViewModels
                 Log.LogEvent(level, message);
             };
 
-            worker.Start(DownloadLocation);
+            worker.Start(DownloadLocation, Settings.Current.MoveToFolder);
             DownloadQueue.Add(worker);
         }
 
@@ -307,7 +303,7 @@ namespace Sharpturbate.Ui.ViewModels
 
         public async void Stop(SharpturbateWorker worker)
         {
-            if (await worker.Stop())
+            if (await worker.StopAsync())
             {
                 DownloadQueue.Remove(worker);
                 DownloadQueue.Refresh();
@@ -322,7 +318,7 @@ namespace Sharpturbate.Ui.ViewModels
 
         public async void Delete(SharpturbateWorker worker)
         {
-            if (await worker.Delete())
+            if (await worker.DeleteAsync())
             {
                 DownloadQueue.Remove(worker);
                 DownloadQueue.Refresh();
@@ -353,7 +349,10 @@ namespace Sharpturbate.Ui.ViewModels
         public void SaveSettings()
         {
             if (!string.IsNullOrWhiteSpace(DownloadLocation))
+            {
                 Settings.DownloadLocation = DownloadLocation;
+                Settings.MoveToFolder = MoveToFolder;
+            }
         }
 
         public void OpenSettings()
@@ -410,12 +409,30 @@ namespace Sharpturbate.Ui.ViewModels
 
             foreach (var worker in DownloadQueue.Where(worker => worker.IsWorking))
             {
-                await worker.Stop();
+                await worker.StopAsync();
             }
 
             callback(true);
 
             base.CanClose(callback);
         }
+
+        #region Private Members
+
+        private int _currentPage = 1;
+        private string _downloadLocation;
+        private string _message;
+        private bool _showMessageDialog;
+        private bool _showSchedulerDialog;
+        private bool _showSettingsDialog;
+        private bool _moveToFolder;
+        private string _streamUrl;
+        private Visibility _taskbarVisibility;
+        private WindowState _windowState;
+        private Visibility _windowVisibility;
+        private Visibility _isLoaderVisible;
+        private Cam _scheduledModel { get; set; }
+
+        #endregion
     }
 }

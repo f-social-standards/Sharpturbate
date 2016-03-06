@@ -2,6 +2,6 @@
 {
     public static class AppSettings
     {
-        public static string AppName { get; set; } = "Sharpturbate";
+        public static string AppName { get; set; } = "Sharpturbate - Respect DCMA claims";
     }
 }

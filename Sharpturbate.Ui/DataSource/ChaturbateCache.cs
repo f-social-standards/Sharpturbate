@@ -42,7 +42,7 @@ namespace Sharpturbate.Ui.DataSource
 
         static ChaturbateCache()
         {
-            const int sleepFor = CacheTimeout * 1000;
+            const int sleepFor = CacheTimeout*1000;
 
             Task.Run(() =>
             {

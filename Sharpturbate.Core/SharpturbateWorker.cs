@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using FFMpegSharp;
 using FFMpegSharp.FFMPEG;
 using FFMpegSharp.FFMPEG.Exceptions;
+using Sharpturbate.Core.Aspects;
+using Sharpturbate.Core.Aspects.Parsers;
 using Sharpturbate.Core.Browser;
 using Sharpturbate.Core.Enums;
 using Sharpturbate.Core.Extensions;
@@ -20,7 +22,144 @@ namespace Sharpturbate.Core
 
     public sealed class SharpturbateWorker : IDisposable
     {
+        public void Start(string outputPath, bool moveToFolder = false)
+        {
+            _timeoutWatch = default(Stopwatch);
+            _streamWatch = Stopwatch.StartNew();
+
+            Task.Run(() =>
+            {
+                _uri = ChaturbateProxy.GetStreamLink(Model);
+
+                while(Status != StreamStatus.Idle && Status != StreamStatus.IdleNoJoin)
+                {
+                    Thread.Sleep(2000);
+                    try
+                    {
+                        if(_removed)
+                            continue;
+                        
+                        var timeOutExceeded = _timeoutWatch?.Elapsed.TotalMinutes > AllowedTimeoutInMinutes ||
+                                              _streamWatch.Elapsed.TotalHours > AllowedMaxHours;
+                        if (timeOutExceeded)
+                            Stop();
+
+                        var urlNeedsRefrsh = _uri == default(Uri) && !_stopped;
+                        if (urlNeedsRefrsh)
+                        {
+                            _uri = ChaturbateProxy.GetStreamLink(Model);
+                            FlagTimeout();
+                            if(_uri == default(Uri))
+                                continue;
+                        }
+
+                        var canDownlod = _uri.IsAvailable() && !_stopped;
+                        if (canDownlod)
+                        {
+                            Status = StreamStatus.Active;
+
+                            _timeoutWatch = default(Stopwatch);
+
+                            var downloadPath = $@"{outputPath}\{Model.StreamName}_part_{ActivePart++}.mp4";
+
+                            DownloadStream(downloadPath);
+                        }
+                        else
+                        {
+                            FlagTimeout();
+
+                            // check if it has timed out for long enough or if the process was stopped
+                            if (!_stopped) continue;
+
+                            var finalClipName =
+                                $"{Model.StreamName}_recorded_on_{DateTime.Now.ToString("MM_dd_yyyy")}_{DateTime.Now.Ticks}.mp4";
+                            var finalOutputPath = $@"{outputPath}\{finalClipName}";
+
+                            Status = StreamStatus.Joining;
+
+                            JoinPartialDownloads(finalOutputPath);
+
+                            if (File.Exists(finalOutputPath))
+                            {
+                                if (moveToFolder)
+                                {
+                                    var modelDirectoy = $@"{outputPath}\{Model.StreamName}";
+
+                                    if (!Directory.Exists(modelDirectoy))
+                                    {
+                                        Directory.CreateDirectory(modelDirectoy);
+                                    }
+
+                                    File.Move(finalOutputPath, $@"{modelDirectoy}\{finalClipName}");
+                                }
+
+                                RemoveTemporaryFiles();
+
+                                Status = StreamStatus.Idle;
+                            }
+                            else
+                            {
+                                Status = StreamStatus.IdleNoJoin;
+                                LogProgress(LogType.Warning,
+                                    $"Could not be join for '{Model.StreamName}'.");
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogProgress(LogType.Error,
+                            $"Error downloading the stream. Info: {e.Message}");
+
+                        ErrorParser.ExceptionInfo(e);
+                    }
+                }
+            });
+        }
+
+        private void Stop()
+        {
+            _stopped = true;
+            _ffmpeg.Stop();
+            LogProgress(LogType.Update, "Downloaded parts are queued to be joined.");
+        }
+
+        public async Task<bool> StopAsync()
+        {
+            try
+            {
+                Stop();
+            }
+            catch (Exception e)
+            {
+                LogProgress(LogType.Error,
+                    $"An error occured while stopping the stream. Details: {e.Message}");
+            }
+
+            return await WaitForStatus(StreamStatus.Idle);
+        }
+
+        public async Task<bool> DeleteAsync()
+        {
+            _removed = true;
+            _ffmpeg.Kill();
+
+            if (_ffmpeg.IsKillFaulty)
+            {
+                LogProgress(LogType.Error, "The FFMpeg process suffered a faulty kill.");
+            }
+            else
+            {
+                LogProgress(LogType.Update, "Downloaded parts are queued for removal.");
+            }
+
+            return await Task.Run(() =>
+            {
+                return RemoveTemporaryFiles();
+            });
+        }
+
         #region Constructor and Properties
+
         public LogHandler OnEvent;
 
         public SharpturbateWorker(ChaturbateModel model)
@@ -47,124 +186,12 @@ namespace Sharpturbate.Core
         {
             _ffmpeg.Dispose();
         }
+
         #endregion
 
-        public void Start(string outputPath)
-        {
-            _timeoutWatch = default(Stopwatch);
-            _totalStreamTime = Stopwatch.StartNew();
-
-            Task.Run(() =>
-            {
-                _uri = ChaturbateProxy.GetStreamLink(Model);
-
-                for (;;)
-                {
-                    try
-                    {
-                        if (_timeoutWatch?.Elapsed.TotalMinutes > AllowedTimeout ||
-                            _totalStreamTime.Elapsed.TotalHours > AllowedMaxHours)
-                                Stop();
-
-                        if (_uri == null && !_stopped)
-                        {
-                            _uri = ChaturbateProxy.GetStreamLink(Model);
-                            SetTimeout();
-                            Thread.Sleep(2000);
-                            continue;
-                        }
-
-                        if (_removed || Status == StreamStatus.Idle)
-                        {
-                            RemoveTempFiles();
-                            break;
-                        }
-
-                        // if the stream is active
-                        if (_uri.IsAvailable() && !_stopped && !_removed)
-                        {
-                            Download(outputPath);
-                        }
-                        else
-                        {
-                            SetTimeout();
-
-                            // check if it has timed out for long enough or if the process was stopped
-                            if (!_stopped) continue;
-
-                            var finalClipName =
-                                $"{Model.StreamName}_recorded_on_{DateTime.Now.ToString("MM_dd_yyyy")}_{DateTime.Now.Ticks}.mp4";
-                            var finalOutputPath = $@"{outputPath}\{finalClipName}";
-
-                            JoinParts(finalOutputPath);
-
-                            if (File.Exists(finalOutputPath))
-                            {
-                                var modelDirectoy = $@"{outputPath}\{Model.StreamName}";
-
-                                if (!Directory.Exists(modelDirectoy))
-                                {
-                                    Directory.CreateDirectory(modelDirectoy);
-                                }
-
-                                File.Move(finalOutputPath, $@"{modelDirectoy}\{finalClipName}");
-
-                                Status = StreamStatus.Idle;
-                            }
-                            else
-                            {
-                                Status = StreamStatus.IdleNoJoin;
-                                LogProgress(LogType.Warning,
-                                    $"File parts could not be joined for stream {Model.StreamName}.");
-                                break;
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        LogProgress(LogType.Error,
-                            $"Something happened while downloading the stream. Info: {e.Message}");
-                    }
-                }
-            });
-        }
-
-        public async Task<bool> Stop()
-        {
-            try
-            {
-                _stopped = true;
-                _ffmpeg.Stop();
-                LogProgress(LogType.Update, "Downloaded parts are queued to be joined.");
-            }
-            catch (Exception e)
-            {
-                LogProgress(LogType.Error,
-                    $"An error occured while stopping the stream. Details: {e.Message}");
-            }
-
-            return await WaitForStatus(StreamStatus.Idle);
-        }
-
-        public async Task<bool> Delete()
-        {
-            _removed = true;
-            _ffmpeg.Kill();
-
-            if (_ffmpeg.IsKillFaulty)
-            {
-                LogProgress(LogType.Error, "The FFMpeg process suffered a faulty kill.");
-            }
-            else
-            {
-                LogProgress(LogType.Update, "Downloaded parts are queued for removal.");
-            }
-
-            return await WaitForStatus(StreamStatus.Removed);
-        }
-
         #region Private Methods
-        private void SetTimeout()
+
+        private void FlagTimeout()
         {
             if (Status == StreamStatus.TimeOut) return;
 
@@ -174,16 +201,14 @@ namespace Sharpturbate.Core
             Status = StreamStatus.TimeOut;
         }
 
-        private void Download(string outputPath)
+        [LogData]
+        private void DownloadStream(string downloadPath)
         {
-            Status = StreamStatus.Active;
-            LogProgress(LogType.Update,
-                $"Starting to download {Model.StreamName} part {ActivePart}...");
-
-            // download the stream
-            var downloadPath = $@"{outputPath}\{Model.StreamName}_part_{ActivePart++}.mp4";
             try
             {
+                LogProgress(LogType.Update,
+                    $"Starting to download {Model.StreamName} part {ActivePart}...");
+
                 _ffmpeg.SaveM3U8Stream(_uri, new FileInfo(downloadPath));
 
                 // check if the file exists after the recording is finished
@@ -194,37 +219,44 @@ namespace Sharpturbate.Core
             catch (FFMpegException fe)
             {
                 if (!fe.Message.ToLower().Contains("404 not found")) return;
-                
-                _uri = null;
+
+                _uri = default(Uri);
                 LogProgress(LogType.Warning, $"{Model.StreamName} is offline, cannot download stream right now.");
                 ActivePart--;
             }
         }
 
-        private void JoinParts(string finalOutputPath)
+        [LogData]
+        private void JoinPartialDownloads(string finalOutputPath)
         {
-            Status = StreamStatus.Joining;
-
+            var joinedParts = GoodParts;
             LogProgress(LogType.Update,
-                $"Joining {_clipParts.Count} temporary parts for {Model.StreamName}...");
+                $"Joining {joinedParts.Length} temporary parts for {Model.StreamName}...");
             // join only good video stream parts
-            _ffmpeg.Join(new FileInfo(finalOutputPath), GoodParts);
+            _ffmpeg.Join(new FileInfo(finalOutputPath), joinedParts);
         }
 
-        private void RemoveTempFiles()
+        private bool RemoveTemporaryFiles()
         {
-            if (!_removed)
-                LogProgress(LogType.Update,
-                    $"Show recored succesfully for {Model.StreamName}.");
+            try
+            {
+                if (!_removed)
+                    LogProgress(LogType.Update,
+                        $"Show recored succesfully for {Model.StreamName}.");
 
-            foreach (var clip in _clipParts)
-                File.Delete(clip);
+                foreach (var clip in _clipParts)
+                    File.Delete(clip);
 
-            LogProgress(LogType.Success,
-                $"Temporary files cleared succesfully for {Model.StreamName}.");
-
-            if (_removed)
-                Status = StreamStatus.Removed;
+                LogProgress(LogType.Success,
+                    $"Temporary files cleared succesfully for {Model.StreamName}.");
+            }
+            catch
+            {
+                LogProgress(LogType.Error,
+                    $"Could not clear temporary files for {Model.StreamName}.");
+                return false;
+            }
+            return true;
         }
 
         private async Task<bool> WaitForStatus(StreamStatus status)
@@ -243,9 +275,11 @@ namespace Sharpturbate.Core
 
             return result;
         }
+
         #endregion
 
         #region Private Members
+
         private volatile IList<string> _clipParts;
 
         private VideoInfo[] GoodParts
@@ -274,8 +308,9 @@ namespace Sharpturbate.Core
             }
         }
 
-        private volatile Stopwatch _totalStreamTime,
-                                    _timeoutWatch;
+        private volatile Stopwatch _streamWatch,
+            _timeoutWatch;
+
         private volatile StringBuilder _log;
         private volatile Uri _uri;
 
@@ -284,7 +319,7 @@ namespace Sharpturbate.Core
         private volatile bool _removed,
             _stopped;
 
-        private const int AllowedTimeout = 2;
+        private const int AllowedTimeoutInMinutes = 4;
         private const int AllowedMaxHours = 4;
 
         private void LogProgress(LogType type, string message)

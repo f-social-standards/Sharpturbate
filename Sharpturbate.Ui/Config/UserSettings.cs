@@ -66,6 +66,16 @@ namespace Sharpturbate.Ui.Config
                 }
             }
 
+            public static bool MoveToFolder
+            {
+                get { return Current.MoveToFolder; }
+                set
+                {
+                    loadedSettings.MoveToFolder = value;
+                    Save();
+                }
+            }
+
             public static string DownloadLocation
             {
                 get { return Current.DefaultPath; }

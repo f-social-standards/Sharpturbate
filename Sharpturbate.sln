@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFMpegSharp", "FFMpegSharp\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Telemetry.Net", "telemetry-js\Telemetry.Net\Telemetry.Net.csproj", "{72AC14AB-F672-425D-883D-00B2A5B73F17}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{8FB70D27-595D-4BAA-9DEE-CE748CE4FBC9}"
+EndProject
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "telemetry-js", "telemetry-js\telemetry-js\telemetry-js.njsproj", "{D9994C67-8848-4C87-9972-934BD227C107}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,8 +43,17 @@ Global
 		{72AC14AB-F672-425D-883D-00B2A5B73F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72AC14AB-F672-425D-883D-00B2A5B73F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72AC14AB-F672-425D-883D-00B2A5B73F17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9994C67-8848-4C87-9972-934BD227C107}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9994C67-8848-4C87-9972-934BD227C107}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9994C67-8848-4C87-9972-934BD227C107}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9994C67-8848-4C87-9972-934BD227C107}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5CEC6504-BD25-45D0-830C-A2162F4AAD12} = {8FB70D27-595D-4BAA-9DEE-CE748CE4FBC9}
+		{72AC14AB-F672-425D-883D-00B2A5B73F17} = {8FB70D27-595D-4BAA-9DEE-CE748CE4FBC9}
+		{D9994C67-8848-4C87-9972-934BD227C107} = {8FB70D27-595D-4BAA-9DEE-CE748CE4FBC9}
 	EndGlobalSection
 EndGlobal
