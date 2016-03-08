@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -334,6 +335,11 @@ namespace Sharpturbate.Ui.ViewModels
         {
             CurrentPage = 1;
             LoadContent(type, CurrentPage);
+        }
+
+        public void NavigateToStats()
+        {
+            Process.Start(new ProcessStartInfo("http://track-telemetryjs.rhcloud.com/"));
         }
 
         public void ChangePage(int increment)

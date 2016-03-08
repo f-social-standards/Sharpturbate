@@ -372,6 +372,15 @@
                                 </ItemsControl>
                             </StackPanel>
                         </materialDesign:PopupBox>
+                        <StackPanel x:Name="Scheduler" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40"
+                                    Foreground="White"
+                                    ToolTip="Schedule favorite download"
+                                    cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                    cal:Message.Attach="[Event Click] = [Action OpenScheduler()]" Margin="10,0,0,0">
+                                <materialDesign:PackIcon Kind="Clock" Height="30" Width="30" Opacity="1" />
+                            </Button>
+                        </StackPanel>
                         <materialDesign:ColorZone x:Name="ManualInput" Mode="Standard" HorizontalAlignment="Left"
                                                   Width="500" Padding="8 4 8 4" CornerRadius="2" Panel.ZIndex="1"
                                                   Margin="16 0 0 0"
@@ -399,18 +408,11 @@
                                 </Button>
                             </Grid>
                         </materialDesign:ColorZone>
-                        <StackPanel x:Name="Scheduler" Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40"
-                                    Foreground="White"
-                                    cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
-                                    cal:Message.Attach="[Event Click] = [Action OpenScheduler()]" Margin="10,0,10,0">
-                                <materialDesign:PackIcon Kind="Clock" Height="30" Width="30" Opacity="1" />
-                            </Button>
-                        </StackPanel>
-                        <StackPanel x:Name="Pager" Orientation="Horizontal" HorizontalAlignment="Right"
+                        <StackPanel x:Name="Pager" Orientation="Horizontal" HorizontalAlignment="Left"
                                     Visibility="{Binding IsPaged, Converter={StaticResource BoolToVisibility}}">
                             <Button Style="{DynamicResource MaterialDesignToolButton}" Height="40" Width="40"
                                     Foreground="White"
+                                    ToolTip="The other porn was better"
                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                     cal:Message.Attach="[Event Click] = [Action ChangePage('-1')]">
                                 <materialDesign:PackIcon Kind="ArrowLeftDropCircleOutline" Height="30" Width="30"
@@ -420,15 +422,26 @@
                                        Text="{Binding CurrentPage, StringFormat='Page {0}'}" Margin="5,5,5,0" />
                             <Button x:Name="NextPage" Style="{DynamicResource MaterialDesignToolButton}" Height="40"
                                     Width="40" Foreground="White"
+                                    ToolTip="More porn"
                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                     cal:Message.Attach="[Event Click] = [Action ChangePage('1')]">
                                 <materialDesign:PackIcon Kind="ArrowRightDropCircleOutline" Height="30" Width="30"
                                                          Opacity="1" />
                             </Button>
-                            <Button x:Name="PreviousPage" Style="{DynamicResource MaterialDesignToolButton}"
+                        </StackPanel>
+                        <StackPanel x:Name="SettingsAndStats" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="Statistics" Style="{DynamicResource MaterialDesignToolButton}"
                                     Height="40" Width="40" Foreground="White"
+                                    ToolTip="Stats for nerds"
                                     cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
-                                    cal:Message.Attach="[Event Click] = [Action OpenSettings()]" Margin="20,0,0,0">
+                                    cal:Message.Attach="[Event Click] = [Action NavigateToStats()]" Margin="0,0,0,0">
+                                <materialDesign:PackIcon Kind="ChartPie" Height="30" Width="30" Opacity="1" />
+                            </Button>
+                            <Button x:Name="Settings" Style="{DynamicResource MaterialDesignToolButton}"
+                                    Height="40" Width="40" Foreground="White"
+                                    ToolTip="Set me you, so I can set you up!"
+                                    cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                    cal:Message.Attach="[Event Click] = [Action OpenSettings()]" Margin="10,0,0,0">
                                 <materialDesign:PackIcon Kind="Settings" Height="30" Width="30" Opacity="1" />
                             </Button>
                         </StackPanel>
