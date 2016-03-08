@@ -31,14 +31,14 @@ namespace Sharpturbate.Core
             {
                 _uri = ChaturbateProxy.GetStreamLink(Model);
 
-                while(Status != StreamStatus.Idle && Status != StreamStatus.IdleNoJoin)
+                while (Status != StreamStatus.Idle && Status != StreamStatus.IdleNoJoin)
                 {
                     Thread.Sleep(2000);
                     try
                     {
-                        if(_removed)
+                        if (_removed)
                             continue;
-                        
+
                         var timeOutExceeded = _timeoutWatch?.Elapsed.TotalMinutes > AllowedTimeoutInMinutes ||
                                               _streamWatch.Elapsed.TotalHours > AllowedMaxHours;
                         if (timeOutExceeded)
@@ -49,7 +49,7 @@ namespace Sharpturbate.Core
                         {
                             _uri = ChaturbateProxy.GetStreamLink(Model);
                             FlagTimeout();
-                            if(_uri == default(Uri))
+                            if (_uri == default(Uri))
                                 continue;
                         }
 
@@ -186,6 +186,8 @@ namespace Sharpturbate.Core
         public bool IsWorking => Status == StreamStatus.Active;
 
         public bool IsNotWorking => !IsWorking;
+
+        public bool IsComplete { get { return Status == StreamStatus.Idle; } }
 
         public void Dispose()
         {
