@@ -110,7 +110,12 @@ namespace Sharpturbate.Core
                         LogProgress(LogType.Error,
                             $"Error downloading the stream. Info: {e.Message}");
 
-                        ErrorParser.ExceptionInfo(e);
+                        if (loggedExceptions.All(x => x.Message != e.Message))
+                        {
+                            ErrorParser.ExceptionInfo(e);
+                            loggedExceptions.Add(e);
+                        }
+
                     }
                 }
             });
@@ -281,7 +286,7 @@ namespace Sharpturbate.Core
         #region Private Members
 
         private volatile IList<string> _clipParts;
-
+        private List<Exception> loggedExceptions { get; set; } = new List<Exception>();  
         private VideoInfo[] GoodParts
         {
             get
