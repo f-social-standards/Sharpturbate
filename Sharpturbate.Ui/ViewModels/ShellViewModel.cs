@@ -17,9 +17,11 @@ using Sharpturbate.Ui.Logging;
 using Sharpturbate.Ui.Models;
 using Sharpturbate.Ui.RegularExpressions;
 using static Sharpturbate.Ui.Config.UserSettings<Sharpturbate.Core.Models.ChaturbateSettings>;
+using PropertyChanged;
 
 namespace Sharpturbate.Ui.ViewModels
 {
+    [ImplementPropertyChanged]
     public sealed class ShellViewModel : Conductor<IScreen>
     {
         public ShellViewModel()
@@ -56,137 +58,33 @@ namespace Sharpturbate.Ui.ViewModels
 
         public int Interval { get; set; }
 
-        public Cam ScheduledModel
-        {
-            get { return _scheduledModel; }
-            set
-            {
-                _scheduledModel = value;
-                NotifyOfPropertyChange(() => ScheduledModel);
-            }
-        }
+        public Cam ScheduledModel { get; set; }
 
-        public string DownloadLocation
-        {
-            get { return _downloadLocation; }
-            set
-            {
-                _downloadLocation = value;
-                NotifyOfPropertyChange(() => DownloadLocation);
-            }
-        }
+        public string DownloadLocation { get; set; }
 
-        public bool MoveToFolder
-        {
-            get { return _moveToFolder; }
-            set
-            {
-                _moveToFolder = value;
-                NotifyOfPropertyChange(() => MoveToFolder);
-            }
-        }
+        public bool MoveToFolder { get; set; }
 
-        public Visibility IsLoaderVisible
-        {
-            get { return _isLoaderVisible; }
-            set
-            {
-                _isLoaderVisible = value;
-                NotifyOfPropertyChange(() => IsLoaderVisible);
-            }
-        }
+        public Visibility IsLoaderVisible { get; set; }
 
-        public bool ShowSettingsDialog
-        {
-            get { return _showSettingsDialog; }
-            set
-            {
-                _showSettingsDialog = value;
-                NotifyOfPropertyChange(() => ShowSettingsDialog);
-            }
-        }
+        public bool ShowSettingsDialog { get; set; }
 
-        public bool ShowSchedulerDialog
-        {
-            get { return _showSchedulerDialog; }
-            set
-            {
-                _showSchedulerDialog = value;
-                NotifyOfPropertyChange(() => ShowSchedulerDialog);
-            }
-        }
+        public bool ShowSchedulerDialog { get; set; }
 
         public bool IsPaged => ChaturbateCache.CurrentRoom != Rooms.Favorites;
 
-        public int CurrentPage
-        {
-            get { return _currentPage; }
-            private set
-            {
-                _currentPage = value;
-                NotifyOfPropertyChange(() => CurrentPage);
-            }
-        }
+        public int CurrentPage { get; set; }
 
-        public string StreamUrl
-        {
-            get { return _streamUrl; }
-            set
-            {
-                _streamUrl = value;
-                NotifyOfPropertyChange(() => StreamUrl);
-            }
-        }
+        public string StreamUrl { get; set; }
 
-        public WindowState WindowState
-        {
-            get { return _windowState; }
-            set
-            {
-                _windowState = value;
-                NotifyOfPropertyChange(() => WindowState);
-            }
-        }
+        public WindowState WindowState { get; set; }
 
-        public Visibility WindowVisibility
-        {
-            get { return _windowVisibility; }
-            set
-            {
-                _windowVisibility = value;
-                NotifyOfPropertyChange(() => WindowVisibility);
-            }
-        }
+        public Visibility WindowVisibility { get; set; }
 
-        public Visibility TaskbarVisibility
-        {
-            get { return _taskbarVisibility; }
-            set
-            {
-                _taskbarVisibility = value;
-                NotifyOfPropertyChange(() => TaskbarVisibility);
-            }
-        }
+        public Visibility TaskbarVisibility { get; set; }
 
-        public string Message
-        {
-            get { return _message; }
-            set
-            {
-                _message = value;
-                NotifyOfPropertyChange(() => Message);
-            }
-        }
+        public string Message { get; set; }
 
-        public bool ShowMessageDialog
-        {
-            get { return _showMessageDialog; }
-            set
-            {
-                _showMessageDialog = value;
-                NotifyOfPropertyChange(() => ShowMessageDialog);
-            }
-        }
+        public bool ShowMessageDialog { get; set; }
 
         public void ShowMessage(string message)
         {
@@ -422,23 +320,5 @@ namespace Sharpturbate.Ui.ViewModels
 
             base.CanClose(callback);
         }
-
-        #region Private Members
-
-        private int _currentPage = 1;
-        private string _downloadLocation;
-        private string _message;
-        private bool _showMessageDialog;
-        private bool _showSchedulerDialog;
-        private bool _showSettingsDialog;
-        private bool _moveToFolder;
-        private string _streamUrl;
-        private Visibility _taskbarVisibility;
-        private WindowState _windowState;
-        private Visibility _windowVisibility;
-        private Visibility _isLoaderVisible;
-        private Cam _scheduledModel { get; set; }
-
-        #endregion
     }
 }
