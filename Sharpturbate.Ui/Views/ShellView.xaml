@@ -289,7 +289,7 @@
                                                         <ColumnDefinition />
                                                         <ColumnDefinition />
                                                     </Grid.ColumnDefinitions>
-                                                    <ToggleButton VerticalAlignment="Center" IsChecked="{Binding IsComplete}"
+                                                    <ToggleButton VerticalAlignment="Center" IsChecked="False"
                                                           Style="{StaticResource MaterialDesignActionToggleButton}">
                                                         <Image Source="{Binding Model.ImageSource}" Stretch="UniformToFill" />
                                                     </ToggleButton>
