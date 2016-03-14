@@ -2,11 +2,11 @@
 using System.IO;
 using System.Linq;
 using FFMpegSharp;
-using PostSharp.Aspects;
 using Sharpturbate.Core.Telemetry.Enums;
 using Sharpturbate.Core.Telemetry.Models;
 using Telemetry.Net.Core;
 using Telemetry.Net.DataModel;
+using ArxOne.MrAdvice.Advice;
 
 namespace Sharpturbate.Core.Aspects.Parsers
 {
@@ -14,11 +14,11 @@ namespace Sharpturbate.Core.Aspects.Parsers
     {
         public const string MethodName = "JoinPartialDownloads";
 
-        public static async void JoinInfo(MethodExecutionArgs args)
+        public static async void JoinInfo(MethodAdviceContext args)
         {
-            if (args.Method.Name != MethodName) return;
+            if (args.TargetMethod.Name != MethodName) return;
 
-            var path = args.Arguments.FirstOrDefault()?.ToString() ?? string.Empty;
+            var path = args.Parameters.FirstOrDefault()?.ToString() ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return;
 
