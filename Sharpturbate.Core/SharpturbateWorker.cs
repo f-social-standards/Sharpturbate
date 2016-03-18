@@ -110,12 +110,18 @@ namespace Sharpturbate.Core
                         LogProgress(LogType.Error,
                             $"Error downloading the stream. Info: {e.Message}");
 
-                        if (loggedExceptions.All(x => x.Message != e.Message))
+                        if (loggedExceptions.FirstOrDefault(x => string.Compare(x.Message, e.Message, true) == 0) == null)
                         {
                             ErrorParser.ExceptionInfo(e);
                             loggedExceptions.Add(e);
                         }
+                        else _exceptionDuplicates++;
 
+                        if (_exceptionDuplicates > 50)
+                        {
+                            Status = StreamStatus.IdleNoJoin;
+                            LogProgress(LogType.Error, "Stream recording has stopped due to multiple thrown errors. Partial downloads have not been deleted.");
+                        }
                     }
                 }
             });
@@ -236,6 +242,8 @@ namespace Sharpturbate.Core
         [LogData]
         private void JoinPartialDownloads(string finalOutputPath)
         {
+            if (Status == StreamStatus.Joining) return;
+
             var joinedParts = GoodParts;
             LogProgress(LogType.Update,
                 $"Joining {joinedParts.Length} temporary parts for {Model.StreamName}...");
@@ -326,6 +334,7 @@ namespace Sharpturbate.Core
         private volatile bool _removed,
             _stopped;
 
+        private int _exceptionDuplicates = 0;
         private const int AllowedTimeoutInMinutes = 4;
         private const int AllowedMaxHours = 4;
 
