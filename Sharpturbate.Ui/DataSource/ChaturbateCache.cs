@@ -96,6 +96,8 @@ namespace Sharpturbate.Ui.DataSource
                 }
             }
 
+            Thread.Sleep(500);
+
             return
                 Cache[key].Value.WithCache()
                     .Select(x => new Cam(x, Settings.Favorites.Any(model => model.StreamName == x.StreamName)));

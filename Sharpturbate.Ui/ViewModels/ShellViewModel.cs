@@ -294,15 +294,22 @@ namespace Sharpturbate.Ui.ViewModels
             WindowState = WindowState.Maximized;
         }
 
+        public void RefreshContent()
+        {
+            LoadContent(ChaturbateCache.CurrentRoom, ChaturbateCache.CurrentPage);
+        }
+
         private async void LoadContent(Rooms type, int page)
         {
-            CamModels.Clear();
+            CamModels.Clear();            
             IsLoaderVisible = Visibility.Visible;
+           
             CamModels.AddRange((await ChaturbateCache.Get(type, page)).Select(x =>
             {
                 x.IsDownloading = DownloadQueue.Any(q => q.Model.StreamName == x.StreamName);
                 return x;
-            }));
+            }));                
+
             IsLoaderVisible = Visibility.Hidden;
             ShowSettingsDialog = string.IsNullOrWhiteSpace(Settings.DownloadLocation);
             NotifyOfPropertyChange(() => IsPaged);

@@ -432,17 +432,24 @@
                                 </StackPanel>
                                 <StackPanel x:Name="SettingsAndStats" Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button x:Name="Statistics" Style="{DynamicResource MaterialDesignToolButton}"
-                                    Height="40" Width="40" Foreground="White"
-                                    ToolTip="Stats for nerds"
-                                    cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
-                                    cal:Message.Attach="[Event Click] = [Action NavigateToStats()]" Margin="0,0,0,0">
+                                        Height="40" Width="40" Foreground="White"
+                                        ToolTip="Stats for nerds"
+                                        cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                        cal:Message.Attach="[Event Click] = [Action NavigateToStats()]" Margin="0,0,0,0">
                                         <materialDesign:PackIcon Kind="ChartPie" Height="30" Width="30" Opacity="1" />
                                     </Button>
+                                    <Button x:Name="RefreshPage" Style="{DynamicResource MaterialDesignToolButton}"
+                                        Height="40" Width="40" Foreground="White"
+                                        ToolTip="Refresh models"
+                                        cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                        cal:Message.Attach="[Event Click] = [Action RefreshContent()]" Margin="0,0,0,0">
+                                        <materialDesign:PackIcon Kind="Refresh" Height="30" Width="30" Opacity="1" />
+                                    </Button>
                                     <Button x:Name="Settings" Style="{DynamicResource MaterialDesignToolButton}"
-                                    Height="40" Width="40" Foreground="White"
-                                    ToolTip="Set me up, so I can set you up!"
-                                    cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
-                                    cal:Message.Attach="[Event Click] = [Action OpenSettings()]" Margin="10,0,0,0">
+                                        Height="40" Width="40" Foreground="White"
+                                        ToolTip="Set me up, so I can set you up!"
+                                        cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                        cal:Message.Attach="[Event Click] = [Action OpenSettings()]" Margin="10,0,0,0">
                                         <materialDesign:PackIcon Kind="Settings" Height="30" Width="30" Opacity="1" />
                                     </Button>
                                 </StackPanel>
