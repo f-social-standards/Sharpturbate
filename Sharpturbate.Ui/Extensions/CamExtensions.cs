@@ -12,7 +12,7 @@ namespace Sharpturbate.Ui.Extensions
         public static IEnumerable<Cam> WithCache<T>(this IEnumerable<T> camList) where T : ChaturbateModel
         {
             var cache = UserSettings<ChaturbateSettings>.Settings.CacheDirectory;
-            return camList.Select(x => File.Exists($"{cache}\\{x.StreamName}.png")
+            return camList.Select(x => File.Exists($"{cache}\\{x.StreamName}.png") && !x.IsOnline
                 ? new Cam(x, true).ChangeSource($"{cache}\\{x.StreamName}.png")
                 : new Cam(x, true));
         }

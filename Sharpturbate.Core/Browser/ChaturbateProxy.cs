@@ -109,7 +109,7 @@ namespace Sharpturbate.Core.Browser
                 x.IsOnline = aggregatedResults.Any(result => result.StreamName == x.StreamName);
 
                 return x;
-            }).OrderBy(x => x.IsOnline);
+            });
         }
     }
 }

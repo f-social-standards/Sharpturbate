@@ -27,13 +27,13 @@ namespace Sharpturbate.Ui.DataSource
             async (roomType, pageNumber) =>
             {
                 var cams = roomType == Rooms.Favorites
-                    ? await ChaturbateProxy.GetFavorites(Settings.Current)
+                    ? (await ChaturbateProxy.GetFavorites(Settings.Current)).OrderByDescending(x => x.IsOnline).ThenBy(x => x.StreamName)
                     : await ChaturbateProxy.GetStreamsAsync(roomType, pageNumber);
 
                 if (roomType != Rooms.Favorites) return cams;
 
                 foreach (var cam in cams.Where(cam => cam.IsOnline))
-                {
+                {                    
                     new Cam(cam, true).SaveImage(Settings.CacheDirectory);
                 }
 
