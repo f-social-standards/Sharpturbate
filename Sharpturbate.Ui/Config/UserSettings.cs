@@ -75,6 +75,19 @@ namespace Sharpturbate.Ui.Config
                 }
             }
 
+            public static bool IsSafeMode 
+            {
+                get
+                {
+                    return Current.IsSafeMode;
+                }
+                set
+                {
+                    Current.IsSafeMode = value;
+                    Save();
+                }                
+            }
+
             public static bool MoveToFolder
             {
                 get { return Current.MoveToFolder; }

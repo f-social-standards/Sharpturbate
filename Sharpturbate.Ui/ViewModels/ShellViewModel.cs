@@ -44,6 +44,8 @@ namespace Sharpturbate.Ui.ViewModels
 
         public BindableCollection<Cam> ScheduleQueue { get; set; } = new BindableCollection<Cam>();
 
+        public string SafeToggleText { get; set; } = Settings.IsSafeMode ? "Untoggle safe mode" : "Toggle safe mode";
+
         public int ActiveDownloads
         {
             get { return DownloadQueue.Count(x => x.Status == StreamStatus.Active); }
@@ -236,9 +238,9 @@ namespace Sharpturbate.Ui.ViewModels
             LoadContent(type, CurrentPage);
         }
 
-        public void NavigateToStats()
+        public void NavigateToUrl(string url)
         {
-            Process.Start(new ProcessStartInfo("http://track-telemetryjs.rhcloud.com/"));
+            Process.Start(new ProcessStartInfo(url));
         }
 
         public void ChangePage(int increment)
@@ -299,30 +301,46 @@ namespace Sharpturbate.Ui.ViewModels
             LoadContent(ChaturbateCache.CurrentRoom, ChaturbateCache.CurrentPage);
         }
 
+        public void ToggleSafeMode()
+        {
+            Settings.IsSafeMode = !Settings.IsSafeMode;
+            SafeToggleText = Settings.IsSafeMode ? "Untoggle safe mode" : "Toggle safe mode"; 
+            RefreshContent();
+        }
+
         private async void LoadContent(Rooms type, int page)
         {
             CamModels.Clear();            
             IsLoaderVisible = Visibility.Visible;
-           
-            CamModels.AddRange((await ChaturbateCache.Get(type, page)).Select(x =>
-            {
-                x.IsDownloading = DownloadQueue.Any(q => q.Model.StreamName == x.StreamName);
-                return x;
-            }));                
 
-            IsLoaderVisible = Visibility.Hidden;
-            ShowSettingsDialog = string.IsNullOrWhiteSpace(Settings.DownloadLocation);
-            NotifyOfPropertyChange(() => IsPaged);
+            await Task.Run(async () =>
+            {
+                CamModels.AddRange((await ChaturbateCache.Get(type, page)).Select(x =>
+                {
+                    x.IsDownloading = DownloadQueue.Any(q => q.Model.StreamName == x.StreamName);
+                    if (!Settings.IsSafeMode) return x;
+                    x.ImageSource = AppSettings.SafeImage;
+                    return x;
+                }));
+                IsLoaderVisible = Visibility.Hidden;
+                ShowSettingsDialog = string.IsNullOrWhiteSpace(Settings.DownloadLocation);
+                NotifyOfPropertyChange(() => IsPaged);
+            });            
+        }
+
+        public async void StopAll()
+        {
+            foreach (var worker in DownloadQueue.Where(worker => worker.IsWorking))
+            {
+                await worker.StopAsync();
+            }
         }
 
         public override async void CanClose(Action<bool> callback)
         {
             WindowVisibility = Visibility.Hidden;
 
-            foreach (var worker in DownloadQueue.Where(worker => worker.IsWorking))
-            {
-                await worker.StopAsync();
-            }
+            StopAll();
 
             callback(true);
 

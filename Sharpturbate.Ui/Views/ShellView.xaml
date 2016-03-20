@@ -51,11 +51,36 @@
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Width="Auto" Height="Auto">
                     <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14"
+                               Foreground="Gray"
                                Text="{Binding ActiveDownloads, StringFormat='Active downloads: {0}'}" />
                     <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14"
+                               Foreground="Gray"
                                Text="{Binding FinishedDownloads, StringFormat='Finished downloads: {0}'}" />
                     <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14"
+                               Foreground="Gray"
                                Text="{Binding ScheduledDownloads, StringFormat='Scheduled downloads: {0}'}" />
+                    <Button x:Name="TraySafeMode" Style="{DynamicResource MaterialDesignToolButton}"
+                                        Foreground="Gray"
+                                        HorizontalAlignment="Left"
+                                        ToolTip="Toggle safe mode"
+                                        cal:Message.Attach="[Event Click] = [Action ToggleSafeMode()]">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Key" Height="Auto" Width="Auto" Opacity="1" Margin="-7,0,10,0" />
+                            <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14"
+                               Text="{Binding SafeToggleText}" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="StopAll" Style="{DynamicResource MaterialDesignToolButton}"
+                                        Foreground="Gray"
+                                        HorizontalAlignment="Left"
+                                        ToolTip="Toggle safe mode"
+                                        cal:Message.Attach="[Event Click] = [Action StopAll()]">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Stop" Height="Auto" Width="Auto" Opacity="1" Margin="-10,0,10,0" />
+                            <TextBlock Style="{StaticResource MaterialDesignTitleTextBlock}" FontSize="14"
+                               Text="Stop and join all downloads" />
+                        </StackPanel>
+                    </Button>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
@@ -435,7 +460,7 @@
                                         Height="40" Width="40" Foreground="White"
                                         ToolTip="Stats for nerds"
                                         cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
-                                        cal:Message.Attach="[Event Click] = [Action NavigateToStats()]" Margin="0,0,0,0">
+                                        cal:Message.Attach="[Event Click] = [Action NavigateToUrl('http://track-telemetryjs.rhcloud.com/')]" Margin="0,0,0,0">
                                         <materialDesign:PackIcon Kind="ChartPie" Height="30" Width="30" Opacity="1" />
                                     </Button>
                                     <Button x:Name="RefreshPage" Style="{DynamicResource MaterialDesignToolButton}"
@@ -444,6 +469,13 @@
                                         cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
                                         cal:Message.Attach="[Event Click] = [Action RefreshContent()]" Margin="0,0,0,0">
                                         <materialDesign:PackIcon Kind="Refresh" Height="30" Width="30" Opacity="1" />
+                                    </Button>
+                                    <Button x:Name="MainSafeMode" Style="{DynamicResource MaterialDesignToolButton}"
+                                        Height="40" Width="40" Foreground="White"
+                                        ToolTip="Toggle safe mode"
+                                        cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"
+                                        cal:Message.Attach="[Event Click] = [Action ToggleSafeMode()]">
+                                        <materialDesign:PackIcon Kind="Key" Height="30" Width="30" Opacity="1" />
                                     </Button>
                                     <Button x:Name="Settings" Style="{DynamicResource MaterialDesignToolButton}"
                                         Height="40" Width="40" Foreground="White"
