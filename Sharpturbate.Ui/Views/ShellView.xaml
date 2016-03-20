@@ -400,7 +400,7 @@
                                          materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
                                          BorderThickness="0"
                                          MinWidth="200" VerticalAlignment="Center"
-                                         Text="{Binding StreamURL, Mode=TwoWay}" />
+                                         Text="{Binding StreamUrl, Mode=TwoWay}" />
                                         <Button x:Name="CamUrlButton" Style="{DynamicResource MaterialDesignToolButton}"
                                         Grid.Column="2"
                                         cal:Action.TargetWithoutContext="{Binding ElementName=Shell, Path=DataContext}"

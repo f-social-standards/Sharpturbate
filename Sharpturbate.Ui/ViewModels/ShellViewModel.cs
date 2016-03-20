@@ -145,10 +145,11 @@ namespace Sharpturbate.Ui.ViewModels
                 var model = new Cam(streamName);
 
                 DownloadCam(model);
+                StreamUrl = string.Empty;
             }
             else
             {
-                ShowMessage("Please enter a valid stream Url.");
+                ShowMessage("Please enter a valid stream url.");
             }
         }
 
