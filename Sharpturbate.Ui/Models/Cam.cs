@@ -48,9 +48,6 @@ namespace Sharpturbate.Ui.Models
             try
             {
                 string localFile = $"{cacheLocation}\\{StreamName}.png";
-
-                if (File.Exists(localFile)) return;
-
                 var webClient = new WebClient();
                 webClient.DownloadFileAsync(ImageSource, localFile);
             }

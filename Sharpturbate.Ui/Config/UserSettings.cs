@@ -40,6 +40,15 @@ namespace Sharpturbate.Ui.Config
                 {
                     Directory.CreateDirectory(LogDirectory);
                 }
+
+                // clear cache
+                var cachedImages = Directory.GetFiles(CacheDirectory);
+                foreach(var image in cachedImages)
+                {
+                    if (Favorites.FirstOrDefault(x => image.ToLower().Contains(x.StreamName.ToLower())) != null) continue;
+
+                    File.Delete(image);
+                }
             }
 
             public static T Current
