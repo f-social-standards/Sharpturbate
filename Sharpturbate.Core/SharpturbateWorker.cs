@@ -64,7 +64,7 @@ namespace Sharpturbate.Core
             {
                 uri = ChaturbateProxy.GetStreamLink(Model);
 
-                while (Status != StreamStatus.Idle && Status != StreamStatus.IdleNoJoin)
+                while (Status != StreamStatus.Idle && Status != StreamStatus.IdleNoJoin && Status != StreamStatus.Removed)
                 {
                     Thread.Sleep(2000);
                     try
@@ -188,6 +188,7 @@ namespace Sharpturbate.Core
 
             return await Task.Run(() =>
             {
+                Status = StreamStatus.Removed;
                 return RemoveTemporaryFiles();
             });
         }
@@ -200,7 +201,7 @@ namespace Sharpturbate.Core
 
             timeoutWatch = Stopwatch.StartNew();
             LogProgress(LogType.Warning,
-                $"Stream timed out for after recording part {ActivePart - 1}...");
+                $"Stream timed out for after recording part {ActivePart}...");
             Status = StreamStatus.TimeOut;
         }
 
