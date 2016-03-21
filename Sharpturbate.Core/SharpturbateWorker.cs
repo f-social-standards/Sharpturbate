@@ -329,13 +329,15 @@ namespace Sharpturbate.Core
                 return parts.ToArray();
             }
         }
-        private Stopwatch streamWatch,
-                          timeoutWatch;
+        private volatile Stopwatch streamWatch,
+                                   timeoutWatch;
         private StringBuilder log;
         private Uri uri;
-        private FFMpeg ffmpeg;
-        private bool removed,
-                     stopped;
+
+        private volatile FFMpeg ffmpeg;
+        private volatile bool removed,
+                              stopped;
+
         private int exceptionDuplicates = 0;
 
         #endregion
