@@ -135,7 +135,7 @@
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <ToggleButton VerticalAlignment="Center" IsChecked="{Binding IsSelected}"
+                                    <ToggleButton VerticalAlignment="Center"
                                                   Style="{StaticResource MaterialDesignActionToggleButton}">
                                         <Image Source="{Binding ImageSource}" Stretch="UniformToFill" />
                                     </ToggleButton>
@@ -368,7 +368,7 @@
                                                 </Grid>
                                             </Border>
                                             <DataTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                <DataTrigger Binding="{Binding IsComplete}" Value="True">
                                                     <Setter TargetName="Border" Property="Background"
                                                     Value="{DynamicResource MaterialDesignSelection}" />
                                                 </DataTrigger>
