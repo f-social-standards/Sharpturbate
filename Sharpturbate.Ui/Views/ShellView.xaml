@@ -33,11 +33,6 @@
                     Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Slider.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-            <CollectionViewSource Source="{Binding FavoriteModels}" x:Key="SortedFavorites">
-                <CollectionViewSource.SortDescriptions>
-                    <scm:SortDescription PropertyName="StreamName" Direction="Ascending" />
-                </CollectionViewSource.SortDescriptions>
-            </CollectionViewSource>
         </ResourceDictionary>
     </Window.Resources>
     <Grid Width="Auto" Height="Auto">
@@ -130,7 +125,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock>Schedule download:</TextBlock>
                     <ComboBox Grid.Row="1" Grid.Column="3" materialDesign:TextFieldAssist.Hint="Cam Girl"
-                              ItemsSource="{Binding Source={StaticResource SortedFavorites}}"
+                              ItemsSource="{Binding FavoriteModels}"
                               SelectedItem="{Binding ScheduledModel}" Margin="0,-30,0,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>

@@ -35,7 +35,7 @@ namespace Sharpturbate.Ui.ViewModels
 
         public IEnumerable<Rooms> Categories { get; set; } = ChaturbateRooms.Categories;
 
-        public BindableCollection<Cam> FavoriteModels { get; set; } = new BindableCollection<Cam>();
+        public IEnumerable<Cam> FavoriteModels { get; set; } = new BindableCollection<Cam>();
 
         public BindableCollection<Cam> CamModels { get; set; } = new BindableCollection<Cam>();
 
@@ -108,28 +108,33 @@ namespace Sharpturbate.Ui.ViewModels
             ShowMessage(string.Join(Environment.NewLine, logLines));
         }
 
-        public void ScheduleDownload()
+        public async Task ScheduleDownload()
         {
-            ScheduleQueue.Add(ScheduledModel);
+            var streamUri = default(Uri);
+            var scheduledCam = (Cam)ScheduledModel.Clone();
+            var rng = new Random(Environment.TickCount);
+
+            ScheduleQueue.Add(scheduledCam);
             NotifyOfPropertyChange(() => ScheduledDownloads);
 
-            var schedule = Task.Run(() =>
+            await Task.Run(() =>
             {
-                var streamUri = default(Uri);
-                var scheduledCam = ScheduledModel;
-                var rng = new Random(Environment.TickCount);
-
                 while (streamUri == null)
                 {
-                    var timeoutMiliseconds = (Interval + rng.Next(-5, 5))*1000;
+                    var timeoutMiliseconds = (int)TimeSpan.FromMinutes(Interval + rng.Next(-5, 5)).TotalMilliseconds;
                     streamUri = ChaturbateProxy.GetStreamLink(scheduledCam);
+#if DEBUG
+                    Trace.WriteLine($"{scheduledCam.StreamName}");
+                    Thread.Sleep(100);
+#else
                     Thread.Sleep(timeoutMiliseconds);
+#endif
                 }
-
-                ScheduleQueue.Remove(scheduledCam);
-                NotifyOfPropertyChange(() => ScheduledDownloads);
-                DownloadCam(scheduledCam);
             });
+
+            ScheduleQueue.Remove(scheduledCam);
+            NotifyOfPropertyChange(() => ScheduledDownloads);
+            DownloadCam(scheduledCam);
         }
 
         public void DownloadCam()
@@ -269,10 +274,13 @@ namespace Sharpturbate.Ui.ViewModels
 
         public void OpenScheduler()
         {
-            FavoriteModels.Clear();
-            FavoriteModels.AddRange(Settings.Favorites.Where(x =>
+            var newFavorites = Settings.Favorites.Where(x =>
                 DownloadQueue.All(q => q.Model.StreamName != x.StreamName) &&
-                ScheduleQueue.All(sq => sq.StreamName != x.StreamName)));
+                ScheduleQueue.All(sq => sq.StreamName != x.StreamName)).OrderBy(x => x.StreamName);
+
+            try { FavoriteModels = newFavorites; }
+            catch { FavoriteModels = newFavorites; }
+
             ShowSchedulerDialog = true;
         }
 
@@ -336,7 +344,7 @@ namespace Sharpturbate.Ui.ViewModels
             }
         }
 
-        public override async void CanClose(Action<bool> callback)
+        public override void CanClose(Action<bool> callback)
         {
             WindowVisibility = Visibility.Hidden;
 

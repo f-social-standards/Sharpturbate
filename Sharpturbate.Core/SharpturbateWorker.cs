@@ -172,6 +172,7 @@ namespace Sharpturbate.Core
             await Task.Run(() => 
             {
                 int tries = 0;
+                LogProgress(LogType.Update, "Attempting to stop download.");
                 while (ffmpeg.IsWorking && tries++ < 10)
                 {
                     Stop(tries == 0);

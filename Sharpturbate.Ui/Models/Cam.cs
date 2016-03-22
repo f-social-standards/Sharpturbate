@@ -9,7 +9,7 @@ using Sharpturbate.Ui.Logging;
 
 namespace Sharpturbate.Ui.Models
 {
-    public class Cam : ChaturbateModel
+    public class Cam : ChaturbateModel, ICloneable
     {
         public Cam(ChaturbateModel model, bool isFavorite = false)
         {
@@ -55,6 +55,11 @@ namespace Sharpturbate.Ui.Models
             {
                 Log.LogEvent(LogLevel.Error, new Error(e));
             }
+        }
+
+        public object Clone()
+        {
+            return (Cam)this.MemberwiseClone();
         }
     }
 }
