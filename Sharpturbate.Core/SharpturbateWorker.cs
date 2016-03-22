@@ -66,7 +66,7 @@ namespace Sharpturbate.Core
 
                 while (Status != StreamStatus.Idle && Status != StreamStatus.IdleNoJoin && Status != StreamStatus.Removed)
                 {
-                    Thread.Sleep(2000);
+                    Thread.Sleep(200);
                     try
                     {
                         if (removed)
@@ -158,16 +158,26 @@ namespace Sharpturbate.Core
             });
         }
 
-        private void Stop()
+        private void Stop(bool log = true)
         {
             stopped = true;
-            ffmpeg.Stop();
-            LogProgress(LogType.Update, "Downloaded parts are queued to be joined.");
+            ffmpeg.Stop();   
+                    
+            if(log) 
+                LogProgress(LogType.Update, "Downloaded parts are queued to be joined.");
         }
 
         public async Task<bool> StopAsync()
         {
-            Stop();
+            await Task.Run(() => 
+            {
+                int tries = 0;
+                while (ffmpeg.IsWorking && tries++ < 10)
+                {
+                    Stop(tries == 0);
+                    Thread.Sleep(300);
+                }
+            });
 
             return await WaitForStatus(StreamStatus.Idle);
         }
@@ -274,7 +284,7 @@ namespace Sharpturbate.Core
                 // wait for five minutes before deciding to let go
                 while (Status != status && tries++ < 150)
                 {
-                    Thread.Sleep(2000);
+                    Thread.Sleep(100);
                 }
 
                 return Status == status;
@@ -293,7 +303,6 @@ namespace Sharpturbate.Core
 
             OnEvent?.Invoke(type, logEntry);
         }
-
 
         #endregion
 
