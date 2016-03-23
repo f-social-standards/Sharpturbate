@@ -248,6 +248,13 @@ namespace Sharpturbate.Core
 
             Status = StreamStatus.Joining;
             var joinedParts = GoodParts;
+
+            if (joinedParts.Length == 0)
+            {
+                LogProgress(LogType.Warning, "No good temp files available. Join and capture aborted.");
+                return;
+            }
+
             LogProgress(LogType.Update,
                 $"Joining {joinedParts.Length} temporary parts for {Model.StreamName}...");
             // join only good video stream parts
