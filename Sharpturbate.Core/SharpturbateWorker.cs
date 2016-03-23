@@ -66,7 +66,6 @@ namespace Sharpturbate.Core
 
                 while (Status != StreamStatus.Idle && Status != StreamStatus.IdleNoJoin && Status != StreamStatus.Removed)
                 {
-                    Thread.Sleep(200);
                     try
                     {
                         if (removed)
@@ -135,6 +134,7 @@ namespace Sharpturbate.Core
                                     $"Could not join parts not be join for '{Model.StreamName}'.");
                             }
                         }
+                        Thread.Sleep(3500);
                     }
                     catch (Exception e)
                     {
@@ -173,10 +173,10 @@ namespace Sharpturbate.Core
             {
                 int tries = 0;
                 LogProgress(LogType.Update, "Attempting to stop download.");
-                while (ffmpeg.IsWorking && tries++ < 10)
+                while (ffmpeg.IsWorking && tries++ < 2)
                 {
                     Stop(tries == 0);
-                    Thread.Sleep(300);
+                    Thread.Sleep(4000);
                 }
             });
 
@@ -248,6 +248,13 @@ namespace Sharpturbate.Core
 
             Status = StreamStatus.Joining;
             var joinedParts = GoodParts;
+
+            if (joinedParts.Length == 0)
+            {
+                LogProgress(LogType.Warning, "No good temp files available. Join and capture aborted.");
+                return;
+            }
+
             LogProgress(LogType.Update,
                 $"Joining {joinedParts.Length} temporary parts for {Model.StreamName}...");
             // join only good video stream parts
