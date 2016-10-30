@@ -16,8 +16,8 @@ namespace Sharpturbate.Core.Aspects.Parsers
         {
             if (args.TargetMethod.Name != MethodName) return;
 
-            var roomType = args.Parameters.FirstOrDefault()?.ToString();
-            var roomPage = (int?) args.Parameters.LastOrDefault();
+            var roomType = args.Arguments.FirstOrDefault()?.ToString();
+            var roomPage = (int?) args.Arguments.LastOrDefault();
 
             var data = new TelemetryData
             {

@@ -10,7 +10,7 @@ namespace Sharpturbate.Core.Extensions
             try
             {
                 var request = WebRequest.Create(url);
-                request.Method = "HEAD";
+                request.Method = "GET";
 
                 using (var response = (HttpWebResponse) request.GetResponse())
                 {

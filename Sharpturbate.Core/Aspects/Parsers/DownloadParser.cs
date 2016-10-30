@@ -35,7 +35,7 @@ namespace Sharpturbate.Core.Aspects.Parsers
         {
             var data = new TelemetryData();
 
-            var fileName = args.Parameters[0].ToString().Split('\\').Last();
+            var fileName = args.Arguments[0].ToString().Split('\\').Last();
             var info = fileName.Split(new[] {"_part_"}, StringSplitOptions.None);
 
             var modelName = info.First();

@@ -18,7 +18,7 @@ namespace Sharpturbate.Core.Aspects.Parsers
         {
             if (args.TargetMethod.Name != MethodName) return;
 
-            var path = args.Parameters.FirstOrDefault()?.ToString() ?? string.Empty;
+            var path = args.Arguments.FirstOrDefault()?.ToString() ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return;
 
